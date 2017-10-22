@@ -44,7 +44,7 @@ import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.MediaTrack;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.images.WebImage;
 
 import org.json.JSONArray;
@@ -132,13 +132,14 @@ public final class Utils {
      * missing, or to system settings if Google Play services is disabled on the device.
      */
     public static boolean checkGooglePlayServices(final Activity activity) {
-        final int googlePlayServicesCheck = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
+        GoogleApiAvailability api = GoogleApiAvailability.getInstance();
+        final int googlePlayServicesCheck = api.isGooglePlayServicesAvailable(activity);
         switch (googlePlayServicesCheck) {
             case ConnectionResult.SUCCESS:
                 return true;
             default:
-                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(googlePlayServicesCheck, activity, 0);
-                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                Dialog dialog = api.getErrorDialog(activity, googlePlayServicesCheck, 0, new DialogInterface
+                        .OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialogInterface) {
                         activity.finish();
