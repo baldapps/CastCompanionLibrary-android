@@ -16,12 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.tracks.ui;
 
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaTrack;
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -34,6 +28,13 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TextView;
+
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaTrack;
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +127,7 @@ public class TracksChooserDialog extends DialogFragment {
         setRetainInstance(true);
         Bundle mediaWrapper = getArguments().getBundle(VideoCastManager.EXTRA_MEDIA);
         mMediaInfo = Utils.bundleToMediaInfo(mediaWrapper);
-        mCastManager = VideoCastManager.getInstance();
+        mCastManager = CastManagerBuilder.getCastManager();
         mActiveTracks = mCastManager.getActiveTrackIds();
         List<MediaTrack> allTracks = mMediaInfo.getMediaTracks();
         if (allTracks == null || allTracks.isEmpty()) {

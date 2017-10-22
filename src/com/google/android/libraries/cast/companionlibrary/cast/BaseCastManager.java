@@ -16,8 +16,31 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.PendingIntent;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleObserver;
+import android.arch.lifecycle.OnLifecycleEvent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
+import android.support.annotation.IntDef;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.MediaRouteActionProvider;
+import android.support.v7.app.MediaRouteButton;
+import android.support.v7.app.MediaRouteDialogFactory;
+import android.support.v7.media.MediaRouteSelector;
+import android.support.v7.media.MediaRouter;
+import android.support.v7.media.MediaRouter.RouteInfo;
+import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.gms.cast.Cast;
@@ -38,32 +61,11 @@ import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastEx
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.reconnection.ReconnectionJobService;
 import com.google.android.libraries.cast.companionlibrary.cast.reconnection.ReconnectionService;
 import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
 import com.google.android.libraries.cast.companionlibrary.utils.PreferenceAccessor;
 import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.SystemClock;
-import android.support.annotation.IntDef;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.MediaRouteActionProvider;
-import android.support.v7.app.MediaRouteButton;
-import android.support.v7.app.MediaRouteDialogFactory;
-import android.support.v7.media.MediaRouteSelector;
-import android.support.v7.media.MediaRouter;
-import android.support.v7.media.MediaRouter.RouteInfo;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -72,12 +74,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
+
 /**
  * An abstract class that manages connectivity to a cast device. Subclasses are expected to extend
  * the functionality of this class based on their purpose.
  */
 public abstract class BaseCastManager
-        implements ConnectionCallbacks, OnConnectionFailedListener, OnFailedListener {
+        implements ConnectionCallbacks, OnConnectionFailedListener, OnFailedListener, LifecycleObserver {
 
     private static final String TAG = LogUtils.makeLogTag(BaseCastManager.class);
 
@@ -87,6 +93,7 @@ public abstract class BaseCastManager
     public static final int RECONNECTION_STATUS_INACTIVE = 4;
 
     public static final String PREFS_KEY_SESSION_ID = "session-id";
+    public static final String PREFS_KEY_WIFI_STATUS = "wifi-status";
     public static final String PREFS_KEY_SSID = "ssid";
     public static final String PREFS_KEY_MEDIA_END = "media-end";
     public static final String PREFS_KEY_APPLICATION_ID = "application-id";
@@ -96,9 +103,10 @@ public abstract class BaseCastManager
 
     public static final int CLEAR_ALL = 0;
     public static final int CLEAR_ROUTE = 1;
-    public static final int CLEAR_WIFI = 1 << 1;
+    public static final int CLEAR_WIFI_ID = 1 << 1;
     public static final int CLEAR_SESSION = 1 << 2;
     public static final int CLEAR_MEDIA_END = 1 << 3;
+    public static final int CLEAR_WIFI_STATUS = 1 << 4;
 
     public static final int DISCONNECT_REASON_OTHER = 0;
     public static final int DISCONNECT_REASON_CONNECTIVITY = 1;
@@ -336,7 +344,11 @@ public abstract class BaseCastManager
         return mSelectedCastDevice.isOnLocalNetwork();
     }
 
-    private void setDevice(CastDevice device) {
+    public boolean isConnectedOrConnecting(String deviceId) {
+        return (isConnected() || isConnecting()) && TextUtils.equals(deviceId, mSelectedCastDevice.getDeviceId());
+    }
+
+    protected void setDevice(CastDevice device) {
         mSelectedCastDevice = device;
         mDeviceName = mSelectedCastDevice.getFriendlyName();
 
@@ -430,6 +442,7 @@ public abstract class BaseCastManager
      * The library keeps a counter and when at least one page of the application becomes visible,
      * the {@link #onUiVisibilityChanged(boolean)} method is called.
      */
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public final synchronized void incrementUiCounter() {
         mVisibilityCounter++;
         if (!mUiVisible) {
@@ -450,6 +463,7 @@ public abstract class BaseCastManager
      * The library keeps a counter and when all pages of the application become invisible, the
      * {@link #onUiVisibilityChanged(boolean)} method is called.
      */
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public final synchronized void decrementUiCounter() {
         if (--mVisibilityCounter == 0) {
             LOGD(TAG, "UI is no longer visible");
@@ -1148,7 +1162,7 @@ public abstract class BaseCastManager
      * <ul>
      *     <li>CLEAR_SESSION</li>
      *     <li>CLEAR_ROUTE</li>
-     *     <li>CLEAR_WIFI</li>
+     *     <li>CLEAR_WIFI_ID</li>
      *     <li>CLEAR_MEDIA_END</li>
      *     <li>CLEAR_ALL</li>
      * </ul>
@@ -1162,11 +1176,14 @@ public abstract class BaseCastManager
         if (isFlagSet(what, CLEAR_ROUTE)) {
             mPreferenceAccessor.saveStringToPreference(PREFS_KEY_ROUTE_ID, null);
         }
-        if (isFlagSet(what, CLEAR_WIFI)) {
+        if (isFlagSet(what, CLEAR_WIFI_ID)) {
             mPreferenceAccessor.saveStringToPreference(PREFS_KEY_SSID, null);
         }
         if (isFlagSet(what, CLEAR_MEDIA_END)) {
             mPreferenceAccessor.saveLongToPreference(PREFS_KEY_MEDIA_END, null);
+        }
+        if (isFlagSet(what, CLEAR_WIFI_STATUS)) {
+            mPreferenceAccessor.saveLongToPreference(PREFS_KEY_WIFI_STATUS, null);
         }
     }
 
@@ -1182,9 +1199,13 @@ public abstract class BaseCastManager
         long endTime = SystemClock.elapsedRealtime() + mediaDurationLeft;
         mPreferenceAccessor.saveLongToPreference(PREFS_KEY_MEDIA_END, endTime);
         Context applicationContext = mContext.getApplicationContext();
-        Intent service = new Intent(applicationContext, ReconnectionService.class);
-        service.setPackage(applicationContext.getPackageName());
-        applicationContext.startService(service);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ReconnectionJobService.startService(applicationContext);
+        } else {
+            Intent service = new Intent(applicationContext, ReconnectionService.class);
+            service.setPackage(applicationContext.getPackageName());
+            applicationContext.startService(service);
+        }
     }
 
     protected void stopReconnectionService() {
@@ -1193,9 +1214,13 @@ public abstract class BaseCastManager
         }
         LOGD(TAG, "stopReconnectionService()");
         Context applicationContext = mContext.getApplicationContext();
-        Intent service = new Intent(applicationContext, ReconnectionService.class);
-        service.setPackage(applicationContext.getPackageName());
-        applicationContext.stopService(service);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ReconnectionJobService.stopService(applicationContext);
+        } else {
+            Intent service = new Intent(applicationContext, ReconnectionService.class);
+            service.setPackage(applicationContext.getPackageName());
+            applicationContext.stopService(service);
+        }
     }
 
     /**

@@ -16,15 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.tracks;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-
-import com.google.android.gms.cast.TextTrackStyle;
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-import com.google.android.libraries.cast.companionlibrary.utils.PreferenceAccessor;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -37,8 +28,19 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.view.accessibility.CaptioningManager;
 
+import com.google.android.gms.cast.TextTrackStyle;
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+import com.google.android.libraries.cast.companionlibrary.utils.PreferenceAccessor;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
+
 import java.util.HashMap;
 import java.util.Map;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
 
 /**
  * This class manages preference settings for captions for Android versions prior to KitKat and
@@ -79,8 +81,7 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
     static {
         FONT_FAMILY_MAPPING.put("FONT_FAMILY_SANS_SERIF", TextTrackStyle.FONT_FAMILY_SANS_SERIF);
         FONT_FAMILY_MAPPING.put("FONT_FAMILY_SERIF", TextTrackStyle.FONT_FAMILY_SERIF);
-        FONT_FAMILY_MAPPING.put("FONT_FAMILY_MONOSPACED_SANS_SERIF",
-                TextTrackStyle.FONT_FAMILY_MONOSPACED_SANS_SERIF);
+        FONT_FAMILY_MAPPING.put("FONT_FAMILY_MONOSPACED_SANS_SERIF", TextTrackStyle.FONT_FAMILY_MONOSPACED_SANS_SERIF);
     }
 
     static {
@@ -93,7 +94,7 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
         mContext = context;
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        mPreferenceAccessor = VideoCastManager.getInstance().getPreferenceAccessor();
+        mPreferenceAccessor = CastManagerBuilder.getCastManager().getPreferenceAccessor();
     }
 
     public TextTrackStyle getTextTrackStyle() {
@@ -117,12 +118,9 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
                 fontStyle = TextTrackStyle.FONT_STYLE_BOLD;
             }
             textTrackStyle.setFontStyle(fontStyle);
-            textTrackStyle.setForegroundColor(
-                    combineColorAndOpacity(getTextColor(), getTextOpacity()));
+            textTrackStyle.setForegroundColor(combineColorAndOpacity(getTextColor(), getTextOpacity()));
             LOGD(TAG, "Edge is: " + getEdgeType());
-            textTrackStyle.setBackgroundColor(combineColorAndOpacity(getBackgroundColor(),
-                            getBackgroundOpacity())
-            );
+            textTrackStyle.setBackgroundColor(combineColorAndOpacity(getBackgroundColor(), getBackgroundOpacity()));
         }
 
         return textTrackStyle;
@@ -131,133 +129,124 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
     @SuppressLint("NewApi")
     public boolean isCaptionEnabled() {
         if (Utils.IS_KITKAT_OR_ABOVE) {
-            CaptioningManager captioningManager =
-                    (CaptioningManager) mContext.getSystemService(Context.CAPTIONING_SERVICE);
+            CaptioningManager captioningManager = (CaptioningManager) mContext.getSystemService(Context
+                    .CAPTIONING_SERVICE);
             return captioningManager.isEnabled();
         } else {
-            return mPreferenceAccessor.getBooleanFromPreference(
-                    mContext.getString(R.string.ccl_key_caption_enabled), false);
+            return mPreferenceAccessor.getBooleanFromPreference(mContext.getString(R.string.ccl_key_caption_enabled),
+                    false);
         }
     }
 
     public void setFontFamily(String fontFamily) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_font_family), fontFamily);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_font_family),
+                fontFamily);
     }
 
     public String getFontFamily() {
-        return mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_font_family), FONT_FAMILY_SANS_SERIF);
+        return mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string.ccl_key_caption_font_family),
+                FONT_FAMILY_SANS_SERIF);
     }
 
     public void setFontScale(String value) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_font_scale), value);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_font_scale), value);
     }
 
     public float getFontScale() {
-        String scaleStr = mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_font_scale),
-                String.valueOf(TextTrackStyle.DEFAULT_FONT_SCALE));
+        String scaleStr = mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string
+                .ccl_key_caption_font_scale), String
+                .valueOf(TextTrackStyle.DEFAULT_FONT_SCALE));
         return Float.parseFloat(scaleStr);
     }
 
     public void setTextColor(String textColor) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_text_color), textColor);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_text_color), textColor);
     }
 
     public String getTextColor() {
-        return mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_text_color),
-                mContext.getString(R.string.ccl_prefs_caption_text_color_value_default));
+        return mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string.ccl_key_caption_text_color),
+                mContext
+                .getString(R.string.ccl_prefs_caption_text_color_value_default));
     }
 
     public void setTextOpacity(String textColor) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_text_opacity), textColor);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_text_opacity),
+                textColor);
     }
 
     public String getTextOpacity() {
-        return mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_text_opacity),
-                mContext.getString(R.string.ccl_prefs_caption_text_opacity_value_default));
+        return mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string.ccl_key_caption_text_opacity),
+                mContext
+                .getString(R.string.ccl_prefs_caption_text_opacity_value_default));
     }
 
     public void setEdgeType(String textColor) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_edge_type), textColor);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_edge_type), textColor);
     }
 
     public String getEdgeType() {
-        return mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_edge_type), EDGE_TYPE_DEFAULT);
+        return mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string.ccl_key_caption_edge_type),
+                EDGE_TYPE_DEFAULT);
     }
 
     public void setBackgroundColor(Context mContext, String textColor) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_background_color), textColor);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_background_color),
+                textColor);
     }
 
     public String getBackgroundColor() {
-        return mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_background_color),
-                mContext.getString(R.string.ccl_prefs_caption_background_color_value_default));
+        return mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string
+                .ccl_key_caption_background_color), mContext
+                .getString(R.string.ccl_prefs_caption_background_color_value_default));
     }
 
     public void setBackgroundOpacity(String textColor) {
-        mPreferenceAccessor.saveStringToPreference(
-                mContext.getString(R.string.ccl_key_caption_background_opacity), textColor);
+        mPreferenceAccessor.saveStringToPreference(mContext.getString(R.string.ccl_key_caption_background_opacity),
+                textColor);
     }
 
     public String getBackgroundOpacity() {
-        return mPreferenceAccessor.getStringFromPreference(
-                mContext.getString(R.string.ccl_key_caption_background_opacity),
-                mContext.getString(R.string.ccl_prefs_caption_background_opacity_value_default));
+        return mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string
+                .ccl_key_caption_background_opacity), mContext
+                .getString(R.string.ccl_prefs_caption_background_opacity_value_default));
     }
 
     public void setUpPreferences(PreferenceScreen screen) {
-        mCaptionAvailability = (CheckBoxPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_enabled));
+        mCaptionAvailability = (CheckBoxPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_enabled));
 
-        mCaptionFontScaleListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_font_scale));
+        mCaptionFontScaleListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_font_scale));
 
-        mCaptionFontFamilyListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_font_family));
+        mCaptionFontFamilyListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_font_family));
 
-        mCaptionTextColorListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_text_color));
+        mCaptionTextColorListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_text_color));
 
-        mCaptionTextOpacityListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_text_opacity));
+        mCaptionTextOpacityListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_text_opacity));
 
-        mCaptionEdgeTypeListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_edge_type));
+        mCaptionEdgeTypeListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_edge_type));
 
-        mCaptionBackgroundColorListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_background_color));
+        mCaptionBackgroundColorListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_background_color));
 
-        mCaptionBackgroundOpacityListPreference = (ListPreference) screen.findPreference(
-                mContext.getString(R.string.ccl_key_caption_background_opacity));
+        mCaptionBackgroundOpacityListPreference = (ListPreference) screen.findPreference(mContext.getString(R.string
+                .ccl_key_caption_background_opacity));
         isInitialized = true;
 
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_enabled), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_font_family), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_font_scale), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_text_color), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_text_opacity), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_edge_type), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_background_color), false);
-        onSharedPreferenceChanged(mSharedPreferences,
-                mContext.getString(R.string.ccl_key_caption_background_opacity), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_enabled), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_font_family), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_font_scale), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_text_color), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_text_opacity), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_edge_type), false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_background_color),
+                false);
+        onSharedPreferenceChanged(mSharedPreferences, mContext.getString(R.string.ccl_key_caption_background_opacity)
+                , false);
     }
 
     private void setCaptionAvailability(boolean status) {
@@ -274,11 +263,11 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
      * Returns the label of the selected item in a list preference, to be used for the summary of
      * that preference item
      */
-    private String getCaptionSummaryForList(SharedPreferences sharedPreferences, int keyResourceId,
-            int defaultResourceId, int namesResourceId, int valuesResourceId) {
+    private String getCaptionSummaryForList(SharedPreferences sharedPreferences, int keyResourceId, int
+            defaultResourceId, int namesResourceId, int valuesResourceId) {
         Resources resources = mContext.getResources();
-        String value = sharedPreferences.getString(resources.getString(keyResourceId),
-                resources.getString(defaultResourceId));
+        String value = sharedPreferences.getString(resources.getString(keyResourceId), resources.getString
+                (defaultResourceId));
         String[] labels = resources.getStringArray(namesResourceId);
         String[] values = resources.getStringArray(valuesResourceId);
         for (int i = 0; i < values.length; i++) {
@@ -294,82 +283,54 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
         onSharedPreferenceChanged(sharedPreferences, key, true);
     }
 
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
-            String key, boolean broadcast) {
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key, boolean broadcast) {
         if (!isInitialized) {
             return;
         }
         if (mContext.getString(R.string.ccl_key_caption_enabled).equals(key)) {
-            mCaptionAvailability.setSummary(
-                    mCaptionAvailability.isChecked() ? R.string.ccl_prefs_caption_enabled
-                            : R.string.ccl_prefs_caption_disabled
-            );
+            mCaptionAvailability.setSummary(mCaptionAvailability.isChecked() ? R.string.ccl_prefs_caption_enabled : R
+                    .string.ccl_prefs_caption_disabled);
             setCaptionAvailability(mCaptionAvailability.isChecked());
             if (broadcast) {
-                VideoCastManager.getInstance()
-                        .onTextTrackEnabledChanged(mCaptionAvailability.isChecked());
+                ((VideoCastManager) CastManagerBuilder.getCastManager()).onTextTrackEnabledChanged
+                        (mCaptionAvailability.isChecked());
             }
             return;
         }
 
         if (mContext.getString(R.string.ccl_key_caption_font_scale).equals(key)) {
-            mCaptionFontScaleListPreference
-                    .setSummary(
-                            getCaptionSummaryForList(sharedPreferences,
-                                    R.string.ccl_key_caption_font_scale,
-                                    R.string.ccl_prefs_caption_font_scale_value_default,
-                                    R.array.ccl_prefs_caption_font_scale_names,
-                                    R.array.ccl_prefs_caption_font_scale_values)
-                    );
+            mCaptionFontScaleListPreference.setSummary(getCaptionSummaryForList(sharedPreferences, R.string
+                    .ccl_key_caption_font_scale, R.string.ccl_prefs_caption_font_scale_value_default, R.array
+                    .ccl_prefs_caption_font_scale_names, R.array.ccl_prefs_caption_font_scale_values));
         } else if (mContext.getString(R.string.ccl_key_caption_font_family).equals(key)) {
-            mCaptionFontFamilyListPreference
-                    .setSummary(
-                            getCaptionSummaryForList(sharedPreferences,
-                                    R.string.ccl_key_caption_font_family,
-                                    R.string.ccl_prefs_caption_font_family_value_default,
-                                    R.array.ccl_prefs_caption_font_family_names,
-                                    R.array.ccl_prefs_caption_font_family_values)
-                    );
+            mCaptionFontFamilyListPreference.setSummary(getCaptionSummaryForList(sharedPreferences, R.string
+                    .ccl_key_caption_font_family, R.string.ccl_prefs_caption_font_family_value_default, R.array
+                    .ccl_prefs_caption_font_family_names, R.array.ccl_prefs_caption_font_family_values));
         } else if (mContext.getString(R.string.ccl_key_caption_text_color).equals(key)) {
-            mCaptionTextColorListPreference
-                    .setSummary(
-                            getCaptionSummaryForList(sharedPreferences,
-                                    R.string.ccl_key_caption_text_color,
-                                    R.string.ccl_prefs_caption_text_color_value_default,
-                                    R.array.ccl_prefs_caption_color_names,
-                                    R.array.ccl_prefs_caption_color_values)
-                    );
+            mCaptionTextColorListPreference.setSummary(getCaptionSummaryForList(sharedPreferences, R.string
+                    .ccl_key_caption_text_color, R.string.ccl_prefs_caption_text_color_value_default, R.array
+                    .ccl_prefs_caption_color_names, R.array.ccl_prefs_caption_color_values));
         } else if (mContext.getString(R.string.ccl_key_caption_text_opacity).equals(key)) {
-            String opacity = mPreferenceAccessor.getStringFromPreference(
-                    mContext.getString(R.string.ccl_key_caption_text_opacity),
-                    mContext.getString(R.string.ccl_prefs_caption_text_opacity_value_default));
-            mCaptionTextOpacityListPreference
-                    .setSummary(OPACITY_MAPPING.get(opacity) + "%%");
+            String opacity = mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string
+                    .ccl_key_caption_text_opacity), mContext
+                    .getString(R.string.ccl_prefs_caption_text_opacity_value_default));
+            mCaptionTextOpacityListPreference.setSummary(OPACITY_MAPPING.get(opacity) + "%%");
         } else if (mContext.getString(R.string.ccl_key_caption_edge_type).equals(key)) {
-            mCaptionEdgeTypeListPreference
-                    .setSummary(
-                            getCaptionSummaryForList(sharedPreferences,
-                                    R.string.ccl_key_caption_edge_type,
-                                    R.string.ccl_prefs_caption_edge_type_value_default,
-                                    R.array.ccl_prefs_caption_edge_type_names,
-                                    R.array.ccl_prefs_caption_edge_type_values)
-                    );
+            mCaptionEdgeTypeListPreference.setSummary(getCaptionSummaryForList(sharedPreferences, R.string
+                    .ccl_key_caption_edge_type, R.string.ccl_prefs_caption_edge_type_value_default, R.array
+                    .ccl_prefs_caption_edge_type_names, R.array.ccl_prefs_caption_edge_type_values));
         } else if (mContext.getString(R.string.ccl_key_caption_background_color).equals(key)) {
-            mCaptionBackgroundColorListPreference
-                    .setSummary(getCaptionSummaryForList(sharedPreferences,
-                            R.string.ccl_key_caption_background_color,
-                            R.string.ccl_prefs_caption_background_color_value_default,
-                            R.array.ccl_prefs_caption_color_names,
-                            R.array.ccl_prefs_caption_color_values));
+            mCaptionBackgroundColorListPreference.setSummary(getCaptionSummaryForList(sharedPreferences, R.string
+                    .ccl_key_caption_background_color, R.string.ccl_prefs_caption_background_color_value_default, R
+                    .array.ccl_prefs_caption_color_names, R.array.ccl_prefs_caption_color_values));
         } else if (mContext.getString(R.string.ccl_key_caption_background_opacity).equals(key)) {
-            String opacity = mPreferenceAccessor.getStringFromPreference(
-                    mContext.getString(R.string.ccl_key_caption_background_opacity),
-                    mContext.getString(R.string.ccl_prefs_caption_background_opacity_value_default));
-            mCaptionBackgroundOpacityListPreference
-                    .setSummary(OPACITY_MAPPING.get(opacity) + "%%");
+            String opacity = mPreferenceAccessor.getStringFromPreference(mContext.getString(R.string
+                    .ccl_key_caption_background_opacity), mContext
+                    .getString(R.string.ccl_prefs_caption_background_opacity_value_default));
+            mCaptionBackgroundOpacityListPreference.setSummary(OPACITY_MAPPING.get(opacity) + "%%");
         }
         if (broadcast) {
-            VideoCastManager.getInstance().onTextTrackStyleChanged(getTextTrackStyle());
+            ((VideoCastManager) CastManagerBuilder.getCastManager()).onTextTrackStyleChanged(getTextTrackStyle());
         }
 
     }

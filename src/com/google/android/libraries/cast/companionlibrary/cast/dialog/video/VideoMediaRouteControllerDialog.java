@@ -16,20 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.dialog.video;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.MediaStatus;
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -42,6 +28,22 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaStatus;
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * A custom {@link MediaRouteControllerDialog} that provides an album art, a play/pause button and
@@ -83,7 +85,7 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
         super(context, R.style.CCLCastDialog);
         try {
             this.mContext = context;
-            mCastManager = VideoCastManager.getInstance();
+            mCastManager = CastManagerBuilder.getCastManager();
             mState = mCastManager.getPlaybackStatus();
             mCastConsumerImpl = new VideoCastConsumerImpl() {
 

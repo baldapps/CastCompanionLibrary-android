@@ -16,49 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.gms.cast.ApplicationMetadata;
-import com.google.android.gms.cast.Cast;
-import com.google.android.gms.cast.Cast.CastOptions.Builder;
-import com.google.android.gms.cast.Cast.MessageReceivedCallback;
-import com.google.android.gms.cast.CastDevice;
-import com.google.android.gms.cast.CastStatusCodes;
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.MediaQueueItem;
-import com.google.android.gms.cast.MediaStatus;
-import com.google.android.gms.cast.MediaTrack;
-import com.google.android.gms.cast.RemoteMediaPlayer;
-import com.google.android.gms.cast.RemoteMediaPlayer.MediaChannelResult;
-import com.google.android.gms.cast.TextTrackStyle;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.common.images.WebImage;
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumer;
-import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.player.MediaAuthService;
-import com.google.android.libraries.cast.companionlibrary.cast.player.VideoCastControllerActivity;
-import com.google.android.libraries.cast.companionlibrary.cast.tracks.OnTracksSelectedListener;
-import com.google.android.libraries.cast.companionlibrary.cast.tracks.TracksPreferenceManager;
-import com.google.android.libraries.cast.companionlibrary.notification.VideoCastNotificationService;
-import com.google.android.libraries.cast.companionlibrary.remotecontrol.VideoIntentReceiver;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-import com.google.android.libraries.cast.companionlibrary.widgets.IMiniController;
-import com.google.android.libraries.cast.companionlibrary.widgets.MiniController;
-import com.google.android.libraries.cast.companionlibrary.widgets.MiniController.OnMiniControllerChangedListener;
-import com.google.android.libraries.cast.companionlibrary.widgets.ProgressWatcher;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
@@ -85,6 +42,45 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.accessibility.CaptioningManager;
 
+import com.google.android.gms.cast.ApplicationMetadata;
+import com.google.android.gms.cast.Cast;
+import com.google.android.gms.cast.Cast.CastOptions.Builder;
+import com.google.android.gms.cast.Cast.MessageReceivedCallback;
+import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.CastStatusCodes;
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
+import com.google.android.gms.cast.MediaStatus;
+import com.google.android.gms.cast.MediaTrack;
+import com.google.android.gms.cast.RemoteMediaPlayer;
+import com.google.android.gms.cast.RemoteMediaPlayer.MediaChannelResult;
+import com.google.android.gms.cast.TextTrackStyle;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.common.images.WebImage;
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumer;
+import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.player.MediaAuthService;
+import com.google.android.libraries.cast.companionlibrary.cast.player.VideoCastControllerActivity;
+import com.google.android.libraries.cast.companionlibrary.cast.tracks.OnTracksSelectedListener;
+import com.google.android.libraries.cast.companionlibrary.cast.tracks.TracksPreferenceManager;
+import com.google.android.libraries.cast.companionlibrary.notification.VideoCastNotificationService;
+import com.google.android.libraries.cast.companionlibrary.remotecontrol.VideoIntentReceiver;
+import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
+import com.google.android.libraries.cast.companionlibrary.widgets.IMiniController;
+import com.google.android.libraries.cast.companionlibrary.widgets.MiniController;
+import com.google.android.libraries.cast.companionlibrary.widgets.MiniController.OnMiniControllerChangedListener;
+import com.google.android.libraries.cast.companionlibrary.widgets.ProgressWatcher;
+
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -100,16 +96,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
+
 /**
  * A subclass of {@link BaseCastManager} that is suitable for casting video contents (it
  * also provides a single custom data channel/namespace if an out-of-band communication is
  * needed).
  * <p>
- * Clients need to initialize this class by calling
- * {@link #initialize(android.content.Context, CastConfiguration)} in the Application's
- * {@code onCreate()} method. All configurable parameters are encapsulates in the
- * {@link CastConfiguration} parameter. To access the (singleton) instance of this class, clients
- * need to call {@link #getInstance()}.
+ * All configurable parameters are encapsulates in the
+ * {@link CastConfiguration} parameter.
  * <p>Callers can add {@link MiniController} components to their application pages by adding the
  * corresponding widget to their layout xml and then calling {@code }addMiniController()}. This
  * class manages various states of the remote cast device. Client applications, however, can
@@ -128,6 +125,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @see CastConfiguration
  */
+@SuppressWarnings({"JavaDoc", "deprecation", "NullableProblems", "unused"})
 public class VideoCastManager extends BaseCastManager
         implements OnMiniControllerChangedListener, OnFailedListener {
 
@@ -162,7 +160,6 @@ public class VideoCastManager extends BaseCastManager
         DEVICE
     }
 
-    private static VideoCastManager sInstance;
     private Class<?> mTargetActivity;
     private final Set<IMiniController> mMiniControllers = Collections
             .synchronizedSet(new HashSet<IMiniController>());
@@ -197,10 +194,7 @@ public class VideoCastManager extends BaseCastManager
     public static final int QUEUE_OPERATION_PREV = 11;
     public static final int QUEUE_OPERATION_SET_REPEAT = 12;
 
-    private VideoCastManager() {
-    }
-
-    protected VideoCastManager(Context context, CastConfiguration castConfiguration) {
+    public VideoCastManager(Context context, CastConfiguration castConfiguration) {
         super(context, castConfiguration);
         LOGD(TAG, "VideoCastManager is instantiated");
         mDataNamespace = castConfiguration.getNamespaces() == null ? null
@@ -221,6 +215,7 @@ public class VideoCastManager extends BaseCastManager
         if (mNotificationServiceClass == null) {
             mNotificationServiceClass = VideoCastNotificationService.class;
         }
+        setupTrackManager();
     }
 
     /**
@@ -229,36 +224,6 @@ public class VideoCastManager extends BaseCastManager
      */
     public final Class<? extends Service> getNotificationServiceClass() {
         return mNotificationServiceClass;
-    }
-
-    public static synchronized VideoCastManager initialize(Context context,
-            CastConfiguration castConfiguration) {
-        if (sInstance == null) {
-            LOGD(TAG, "New instance of VideoCastManager is created");
-            if (ConnectionResult.SUCCESS != GooglePlayServicesUtil
-                    .isGooglePlayServicesAvailable(context)) {
-                String msg = "Couldn't find the appropriate version of Google Play Services";
-                LOGE(TAG, msg);
-            }
-            sInstance = new VideoCastManager(context, castConfiguration);
-        }
-        sInstance.setupTrackManager();
-        return sInstance;
-    }
-
-    /**
-     * Returns a (singleton) instance of this class. Clients should call this method in order to
-     * get a hold of this singleton instance, only after it is initialized. If it is not initialized
-     * yet, an {@link IllegalStateException} will be thrown.
-     *
-     */
-    public static VideoCastManager getInstance() {
-        if (sInstance == null) {
-            String msg = "No VideoCastManager instance was found, did you forget to initialize it?";
-            LOGE(TAG, msg);
-            throw new IllegalStateException(msg);
-        }
-        return sInstance;
     }
 
     protected void setupTrackManager() {
@@ -518,6 +483,7 @@ public class VideoCastManager extends BaseCastManager
             case MediaStatus.PLAYER_STATE_BUFFERING:
                 return true;
             case MediaStatus.PLAYER_STATE_IDLE:
+                //noinspection SimplifiableIfStatement
                 if (isRemoteStreamLive() && (idleReason == MediaStatus.IDLE_REASON_CANCELED)) {
                     // we have a live stream and we have "stopped/paused" it
                     return true;
@@ -799,7 +765,10 @@ public class VideoCastManager extends BaseCastManager
         service.setPackage(mContext.getPackageName());
         service.setAction(VideoCastNotificationService.ACTION_VISIBILITY);
         service.putExtra(VideoCastNotificationService.NOTIFICATION_VISIBILITY, !mUiVisible);
-        return mContext.startService(service) != null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mUiVisible) {
+            return mContext.startForegroundService(service) != null;
+        } else
+            return mContext.startService(service) != null;
     }
 
     private void stopNotificationService() {
@@ -2152,8 +2121,9 @@ public class VideoCastManager extends BaseCastManager
     /*
     * This is called by onQueueStatusUpdated() of RemoteMediaPlayer
     */
+    @SuppressLint("DefaultLocale")
     private void onQueueUpdated(List<MediaQueueItem> queueItems, MediaQueueItem item,
-            int repeatMode, boolean shuffle) {
+                                int repeatMode, boolean shuffle) {
         LOGD(TAG, "onQueueUpdated() reached");
         LOGD(TAG, String.format("Queue Items size: %d, Item: %s, Repeat Mode: %d, Shuffle: %s",
                 queueItems == null ? 0 : queueItems.size(), item, repeatMode, shuffle));

@@ -16,28 +16,8 @@
 
 package com.google.android.libraries.cast.companionlibrary.notification;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.MediaQueueItem;
-import com.google.android.gms.cast.MediaStatus;
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
-import com.google.android.libraries.cast.companionlibrary.cast.MediaQueue;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions
-        .TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.remotecontrol.VideoIntentReceiver;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -47,11 +27,33 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
-import android.support.v7.app.NotificationCompat;
+
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
+import com.google.android.gms.cast.MediaStatus;
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.MediaQueue;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.remotecontrol.VideoIntentReceiver;
+import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * A service to provide status bar Notifications when we are casting. For JB+ versions,
@@ -63,20 +65,15 @@ public class VideoCastNotificationService extends Service {
 
     private static final String TAG = LogUtils.makeLogTag(VideoCastNotificationService.class);
 
-    public static final String ACTION_FORWARD =
-            "com.google.android.libraries.cast.companionlibrary.action.forward";
-    public static final String ACTION_REWIND =
-            "com.google.android.libraries.cast.companionlibrary.action.rewind";
-    public static final String ACTION_TOGGLE_PLAYBACK =
-            "com.google.android.libraries.cast.companionlibrary.action.toggleplayback";
-    public static final String ACTION_PLAY_NEXT =
-            "com.google.android.libraries.cast.companionlibrary.action.playnext";
-    public static final String ACTION_PLAY_PREV =
-            "com.google.android.libraries.cast.companionlibrary.action.playprev";
-    public static final String ACTION_STOP =
-            "com.google.android.libraries.cast.companionlibrary.action.stop";
-    public static final String ACTION_VISIBILITY =
-            "com.google.android.libraries.cast.companionlibrary.action.notificationvisibility";
+    public static final String ACTION_FORWARD = "com.google.android.libraries.cast.companionlibrary.action.forward";
+    public static final String ACTION_REWIND = "com.google.android.libraries.cast.companionlibrary.action.rewind";
+    public static final String ACTION_TOGGLE_PLAYBACK = "com.google.android.libraries.cast.companionlibrary.action" +
+            ".toggleplayback";
+    public static final String ACTION_PLAY_NEXT = "com.google.android.libraries.cast.companionlibrary.action.playnext";
+    public static final String ACTION_PLAY_PREV = "com.google.android.libraries.cast.companionlibrary.action.playprev";
+    public static final String ACTION_STOP = "com.google.android.libraries.cast.companionlibrary.action.stop";
+    public static final String ACTION_VISIBILITY = "com.google.android.libraries.cast.companionlibrary.action" + "" +
+            ".notificationvisibility";
     public static final String EXTRA_FORWARD_STEP_MS = "ccl_extra_forward_step_ms";
     protected static final int NOTIFICATION_ID = 1;
     public static final String NOTIFICATION_VISIBILITY = "visible";
@@ -103,9 +100,9 @@ public class VideoCastNotificationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mDimensionInPixels = Utils.convertDpToPixel(VideoCastNotificationService.this,
-                getResources().getDimension(R.dimen.ccl_notification_image_size));
-        mCastManager = VideoCastManager.getInstance();
+        mDimensionInPixels = Utils.convertDpToPixel(VideoCastNotificationService.this, getResources().getDimension(R
+                .dimen.ccl_notification_image_size));
+        mCastManager = CastManagerBuilder.getCastManager();
         readPersistedData();
         if (!mCastManager.isConnected() && !mCastManager.isConnecting()) {
             mCastManager.reconnectSessionIfPossible();
@@ -120,8 +117,7 @@ public class VideoCastNotificationService extends Service {
         mConsumer = new VideoCastConsumerImpl() {
             @Override
             public void onApplicationDisconnected(int errorCode) {
-                LOGD(TAG, "onApplicationDisconnected() was reached, stopping the notification"
-                        + " service");
+                LOGD(TAG, "onApplicationDisconnected() was reached, stopping the notification" + " service");
                 stopSelf();
             }
 
@@ -155,8 +151,8 @@ public class VideoCastNotificationService extends Service {
             }
 
             @Override
-            public void onMediaQueueUpdated(List<MediaQueueItem> queueItems, MediaQueueItem item,
-                    int repeatMode, boolean shuffle) {
+            public void onMediaQueueUpdated(List<MediaQueueItem> queueItems, MediaQueueItem item, int repeatMode,
+                                            boolean shuffle) {
                 int size = 0;
                 int position = 0;
                 if (queueItems != null) {
@@ -169,16 +165,14 @@ public class VideoCastNotificationService extends Service {
         };
         mCastManager.addVideoCastConsumer(mConsumer);
         mNotificationActions = mCastManager.getCastConfiguration().getNotificationActions();
-        List<Integer> notificationCompactActions = mCastManager.getCastConfiguration()
-                .getNotificationCompactActions();
+        List<Integer> notificationCompactActions = mCastManager.getCastConfiguration().getNotificationCompactActions();
         if (notificationCompactActions != null) {
             mNotificationCompactActionsArray = new int[notificationCompactActions.size()];
             for (int i = 0; i < notificationCompactActions.size(); i++) {
                 mNotificationCompactActionsArray[i] = notificationCompactActions.get(i);
             }
         }
-        mForwardTimeInMillis = TimeUnit.SECONDS
-                .toMillis(mCastManager.getCastConfiguration().getForwardStep());
+        mForwardTimeInMillis = TimeUnit.SECONDS.toMillis(mCastManager.getCastConfiguration().getForwardStep());
     }
 
     @Override
@@ -214,8 +208,8 @@ public class VideoCastNotificationService extends Service {
         return Service.START_STICKY;
     }
 
-    private void setUpNotification(final MediaInfo info)
-            throws TransientNetworkDisconnectionException, NoConnectionException {
+    private void setUpNotification(final MediaInfo info) throws TransientNetworkDisconnectionException,
+            NoConnectionException {
         if (info == null) {
             return;
         }
@@ -237,11 +231,9 @@ public class VideoCastNotificationService extends Service {
             @Override
             protected void onPostExecute(Bitmap bitmap) {
                 try {
-                    mVideoArtBitmap = Utils.scaleAndCenterCropBitmap(bitmap, mDimensionInPixels,
-                            mDimensionInPixels);
+                    mVideoArtBitmap = Utils.scaleAndCenterCropBitmap(bitmap, mDimensionInPixels, mDimensionInPixels);
                     build(info, mVideoArtBitmap, mIsPlaying);
-                } catch (CastException | NoConnectionException
-                        | TransientNetworkDisconnectionException e) {
+                } catch (CastException | NoConnectionException | TransientNetworkDisconnectionException e) {
                     LOGE(TAG, "Failed to set notification for " + info.toString(), e);
                 }
                 if (mVisible && (mNotification != null)) {
@@ -286,8 +278,7 @@ public class VideoCastNotificationService extends Service {
                     break;
                 case MediaStatus.PLAYER_STATE_IDLE: // (== 1)
                     mIsPlaying = false;
-                    if (!mCastManager.shouldRemoteUiBeVisible(mediaStatus,
-                            mCastManager.getIdleReason())) {
+                    if (!mCastManager.shouldRemoteUiBeVisible(mediaStatus, mCastManager.getIdleReason())) {
                         stopForeground(true);
                     } else {
                         setUpNotification(mCastManager.getRemoteMediaInformation());
@@ -321,32 +312,45 @@ public class VideoCastNotificationService extends Service {
         }
     }
 
+    public static void createNotificationChannel(Context context) {
+        NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel("cast", context.getString(R.string.cast_channel),
+                    NotificationManager.IMPORTANCE_LOW);
+            channel.enableVibration(false);
+            channel.enableLights(false);
+            channel.setShowBadge(false);
+            manager.createNotificationChannel(channel);
+        }
+    }
+
     /**
      * Build the MediaStyle notification. The action that are added to this notification are
      * selected by the client application from a pre-defined set of actions
      *
      * @see CastConfiguration.Builder#addNotificationAction(int, boolean)
      **/
-    protected void build(MediaInfo info, Bitmap bitmap, boolean isPlaying)
-            throws CastException, TransientNetworkDisconnectionException, NoConnectionException {
+    protected void build(MediaInfo info, Bitmap bitmap, boolean isPlaying) throws CastException,
+            TransientNetworkDisconnectionException, NoConnectionException {
 
         // Media metadata
         MediaMetadata metadata = info.getMetadata();
-        String castingTo = getResources().getString(R.string.ccl_casting_to_device,
-                mCastManager.getDeviceName());
+        String castingTo = getResources().getString(R.string.ccl_casting_to_device, mCastManager.getDeviceName());
 
-        NotificationCompat.Builder builder
-                = (NotificationCompat.Builder) new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_stat_action_notification)
+        createNotificationChannel(this);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "cast").setSmallIcon(R.drawable
+                .ic_stat_action_notification)
                 .setContentTitle(metadata.getString(MediaMetadata.KEY_TITLE))
                 .setContentText(castingTo)
                 .setContentIntent(getContentIntent(info))
+                .setColor(getColor(R.color.ccl_notification_color))
                 .setLargeIcon(bitmap)
-                .setStyle(new NotificationCompat.MediaStyle()
+                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(mNotificationCompactActionsArray)
                         .setMediaSession(mCastManager.getMediaSessionCompatToken()))
                 .setOngoing(true)
                 .setShowWhen(false)
+                .setColorized(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         for (Integer notificationType : mNotificationActions) {
@@ -385,17 +389,16 @@ public class VideoCastNotificationService extends Service {
         intent.setAction(ACTION_FORWARD);
         intent.setPackage(getPackageName());
         intent.putExtra(EXTRA_FORWARD_STEP_MS, (int) millis);
-        PendingIntent pendingIntent = PendingIntent
-                .getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         int iconResourceId = R.drawable.ic_notification_forward_48dp;
         if (millis == TEN_SECONDS_MILLIS) {
-            iconResourceId = R.drawable.ic_notification_forward10_48dp;
+            iconResourceId = R.drawable.ic_notification_forward_10_24dp;
         } else if (millis == THIRTY_SECONDS_MILLIS) {
-            iconResourceId = R.drawable.ic_notification_forward30_48dp;
+            iconResourceId = R.drawable.ic_notification_forward_30_24dp;
         }
 
-        return new NotificationCompat.Action.Builder(iconResourceId,
-                getString(R.string.ccl_forward), pendingIntent).build();
+        return new NotificationCompat.Action.Builder(iconResourceId, getString(R.string.ccl_forward), pendingIntent)
+                .build();
     }
 
     /**
@@ -406,17 +409,16 @@ public class VideoCastNotificationService extends Service {
         Intent intent = new Intent(this, VideoIntentReceiver.class);
         intent.setAction(ACTION_REWIND);
         intent.setPackage(getPackageName());
-        intent.putExtra(EXTRA_FORWARD_STEP_MS, (int)-millis);
-        PendingIntent pendingIntent = PendingIntent
-                .getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        int iconResourceId = R.drawable.ic_notification_rewind_48dp;
+        intent.putExtra(EXTRA_FORWARD_STEP_MS, (int) -millis);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        int iconResourceId = R.drawable.ic_notification_rewind_24dp;
         if (millis == TEN_SECONDS_MILLIS) {
-            iconResourceId = R.drawable.ic_notification_rewind10_48dp;
+            iconResourceId = R.drawable.ic_notification_rewind10_24dp;
         } else if (millis == THIRTY_SECONDS_MILLIS) {
-            iconResourceId = R.drawable.ic_notification_rewind30_48dp;
+            iconResourceId = R.drawable.ic_notification_rewind30_24dp;
         }
-        return new NotificationCompat.Action.Builder(iconResourceId,
-                getString(R.string.ccl_rewind), pendingIntent).build();
+        return new NotificationCompat.Action.Builder(iconResourceId, getString(R.string.ccl_rewind), pendingIntent)
+                .build();
     }
 
     /**
@@ -426,17 +428,16 @@ public class VideoCastNotificationService extends Service {
      */
     protected NotificationCompat.Action getSkipNextAction() {
         PendingIntent pendingIntent = null;
-        int iconResourceId = R.drawable.ic_notification_skip_next_semi_48dp;
+        int iconResourceId = R.drawable.ic_notification_skip_next_semi_24dp;
         if (mHasNext) {
             Intent intent = new Intent(this, VideoIntentReceiver.class);
             intent.setAction(ACTION_PLAY_NEXT);
             intent.setPackage(getPackageName());
             pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-            iconResourceId = R.drawable.ic_notification_skip_next_48dp;
         }
 
-        return new NotificationCompat.Action.Builder(iconResourceId,
-                getString(R.string.ccl_skip_next), pendingIntent).build();
+        return new NotificationCompat.Action.Builder(iconResourceId, getString(R.string.ccl_skip_next),
+                pendingIntent).build();
     }
 
     /**
@@ -446,17 +447,17 @@ public class VideoCastNotificationService extends Service {
      */
     protected NotificationCompat.Action getSkipPreviousAction() {
         PendingIntent pendingIntent = null;
-        int iconResourceId = R.drawable.ic_notification_skip_prev_semi_48dp;
+        int iconResourceId = R.drawable.ic_notification_skip_prev_semi_24dp;
         if (mHasPrev) {
             Intent intent = new Intent(this, VideoIntentReceiver.class);
             intent.setAction(ACTION_PLAY_PREV);
             intent.setPackage(getPackageName());
             pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-            iconResourceId = R.drawable.ic_notification_skip_prev_48dp;
         }
 
-        return new NotificationCompat.Action.Builder(iconResourceId,
-                getString(R.string.ccl_skip_previous), pendingIntent).build();
+        return new NotificationCompat.Action.Builder(iconResourceId, getString(R.string.ccl_skip_previous),
+                pendingIntent)
+                .build();
     }
 
     /**
@@ -466,19 +467,19 @@ public class VideoCastNotificationService extends Service {
     protected NotificationCompat.Action getPlayPauseAction(MediaInfo info, boolean isPlaying) {
         int pauseOrStopResourceId;
         if (info.getStreamType() == MediaInfo.STREAM_TYPE_LIVE) {
-            pauseOrStopResourceId = R.drawable.ic_notification_stop_48dp;
+            pauseOrStopResourceId = R.drawable.ic_notification_stop_24dp;
         } else {
-            pauseOrStopResourceId = R.drawable.ic_notification_pause_48dp;
+            pauseOrStopResourceId = R.drawable.ic_notification_pause_24dp;
         }
         int pauseOrPlayTextResourceId = isPlaying ? R.string.ccl_pause : R.string.ccl_play;
-        int pauseOrPlayResourceId = isPlaying ? pauseOrStopResourceId
-                : R.drawable.ic_notification_play_48dp;
+        int pauseOrPlayResourceId = isPlaying ? pauseOrStopResourceId : R.drawable.ic_notification_play_24dp;
         Intent intent = new Intent(this, VideoIntentReceiver.class);
         intent.setAction(ACTION_TOGGLE_PLAYBACK);
         intent.setPackage(getPackageName());
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-        return new NotificationCompat.Action.Builder(pauseOrPlayResourceId,
-                getString(pauseOrPlayTextResourceId), pendingIntent).build();
+        return new NotificationCompat.Action.Builder(pauseOrPlayResourceId, getString(pauseOrPlayTextResourceId),
+                pendingIntent)
+                .build();
     }
 
     /**
@@ -490,8 +491,9 @@ public class VideoCastNotificationService extends Service {
         intent.setAction(ACTION_STOP);
         intent.setPackage(getPackageName());
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-        return new NotificationCompat.Action.Builder(R.drawable.ic_notification_disconnect_24dp,
-                getString(R.string.ccl_disconnect), pendingIntent).build();
+        return new NotificationCompat.Action.Builder(R.drawable.ic_notification_disconnect_24dp, getString(R.string
+                .ccl_disconnect), pendingIntent)
+                .build();
     }
 
     /**

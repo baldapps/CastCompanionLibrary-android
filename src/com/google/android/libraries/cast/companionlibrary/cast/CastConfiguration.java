@@ -16,15 +16,15 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast;
 
-import com.google.android.gms.cast.LaunchOptions;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.app.Service;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.v7.app.MediaRouteDialogFactory;
+
+import com.google.android.gms.cast.LaunchOptions;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -35,8 +35,7 @@ import java.util.Locale;
 /**
  * A class that enables clients to customize certain configuration parameters for this library.
  * Clients need to use {@link Builder} to build an instance of this class and pass that to the
- * {@link VideoCastManager#initialize(Context, CastConfiguration)} or
- * {@link DataCastManager#initialize(Context, CastConfiguration)}.
+ * {@link CastManagerFactory#build(Context, CastConfiguration)}.
  */
 public class CastConfiguration {
 

@@ -16,18 +16,20 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.tracks;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.provider.Settings;
+
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * An Activity to show the Captions Preferences for Android versions prior to KitKat
@@ -41,7 +43,7 @@ public class CaptionsPreferenceActivity extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        VideoCastManager castManager = VideoCastManager.getInstance();
+        VideoCastManager castManager = CastManagerBuilder.getCastManager();
         if (!castManager.isFeatureEnabled(CastConfiguration.FEATURE_CAPTIONS_PREFERENCE)) {
             LOGE(TAG, "Did you forget to enable FEATURE_CAPTIONS_PREFERENCE when you initialized"
                     + " the VideoCastManage?");

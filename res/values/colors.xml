@@ -38,4 +38,6 @@
     <color name="ccl_intro_overlay_background_color">#CC000000</color>
     <color name="ccl_intro_overlay_button_background_color">#BB33B5E5</color>
     <color name="ccl_intro_overlay_button_foreground_color">#FFFFFF</color>
+
+    <color name="ccl_notification_color">#4285f4</color>
 </resources>

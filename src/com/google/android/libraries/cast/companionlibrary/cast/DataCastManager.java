@@ -16,34 +16,32 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
+import android.content.Context;
+import android.support.v7.media.MediaRouter.RouteInfo;
+import android.text.TextUtils;
 
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.Cast.CastOptions.Builder;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastStatusCodes;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.DataCastConsumer;
 import com.google.android.libraries.cast.companionlibrary.cast.callbacks.DataCastConsumerImpl;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
 import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-
-import android.content.Context;
-import android.support.v7.media.MediaRouter.RouteInfo;
-import android.text.TextUtils;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * A concrete subclass of {@link BaseCastManager} that is suitable for data-centric applications
@@ -76,29 +74,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class DataCastManager extends BaseCastManager implements Cast.MessageReceivedCallback {
 
     private static final String TAG = LogUtils.makeLogTag(DataCastManager.class);
-    private static DataCastManager sInstance;
     private final Set<String> mNamespaceList = new HashSet<>();
     private final Set<DataCastConsumer> mDataConsumers = new CopyOnWriteArraySet<>();
 
-    private DataCastManager() {
-    }
-
-    public static synchronized DataCastManager initialize(Context context,
-            CastConfiguration castConfiguration) {
-        if (sInstance == null) {
-            LOGD(TAG, "New instance of DataCastManager is created");
-            if (ConnectionResult.SUCCESS != GooglePlayServicesUtil
-                    .isGooglePlayServicesAvailable(context)) {
-                String msg = "Couldn't find the appropriate version of Google Play Services";
-                LOGE(TAG, msg);
-                throw new RuntimeException(msg);
-            }
-            sInstance = new DataCastManager(context, castConfiguration);
-        }
-        return sInstance;
-    }
-
-    protected DataCastManager(Context context, CastConfiguration castConfiguration) {
+    public DataCastManager(Context context, CastConfiguration castConfiguration) {
         super(context, castConfiguration);
         List<String> namespaces = castConfiguration.getNamespaces();
         if (namespaces != null) {
@@ -110,20 +89,6 @@ public class DataCastManager extends BaseCastManager implements Cast.MessageRece
                 }
             }
         }
-    }
-
-    /**
-     * Returns a (singleton) instance of this class. Clients should call this method in order to
-     * get a hold of this singleton instance. If it is not initialized yet, a
-     * {@link CastException} will be thrown.
-     */
-    public static DataCastManager getInstance() {
-        if (sInstance == null) {
-            String msg = "No DataCastManager instance was found, did you forget to initialize it?";
-            LOGE(TAG, msg);
-            throw new IllegalStateException(msg);
-        }
-        return sInstance;
     }
 
     /**

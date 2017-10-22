@@ -2,26 +2,16 @@
 
 CastCompanionLibrary-android is a library project to enable developers integrate Cast capabilities into their applications faster and easier.
 
-**CCL is not recommended for new development because it is only for Cast SDK v2. We recommend you [migrate to Cast SDK v3 (Cast Application Framework)](https://developers.google.com/cast/v2/android_migrate_sender). Also see the [Cast SDK v3 guide](https://developers.google.com/cast/docs/android_sender_setup).**
-
 ## Dependencies
-* google-play-services_lib library from the Android SDK (at least version 9.8.+)
-* android-support-v7-appcompat (version 25.0.0 or above)
-* android-support-v7-mediarouter (version 25.0.0 or above)
+* google-play-services_lib library from the Android SDK (at least version 11.4.+)
+* android-support-v7-appcompat (version 26.1.0 or above)
+* android-support-v7-mediarouter (version 26.1.0 or above)
+* android-support-v4 (version 26.1.0 or above)
 
 ## Set up Instructions
 Set up the project dependencies. To use this library in your project, you have two options:
 
-(1) Add this library from jCenter repo by adding the following line to your project's
-dependencies:
-```shell
- dependencies {
-    ...
-    compile 'com.google.android.libraries.cast.companionlibrary:ccl:2.9.1'
- }
-```
-
-(2) Use the GitHub source and include that as a module dependency by following these steps:
+(1) Use the GitHub source and include that as a module dependency by following these steps:
  * Clone this library into a project named CastCompanionLibrary, parallel to your own application project:
 ```shell
 git clone https://github.com/googlecast/CastCompanionLibrary-android.git CastCompanionLibrary
@@ -46,10 +36,7 @@ See the "CastCompanionLibrary.pdf" inside the project for a more extensive docum
 demonstrates how this library can be used in a real application.
 
 ## References and how to report bugs
-* [Cast Developer Documentation](http://developers.google.com/cast/)
-* [Design Checklist](http://developers.google.com/cast/docs/design_checklist)
 * If you find any issues with this library, please open a bug here on GitHub
-* Question are answered on [StackOverflow](http://stackoverflow.com/questions/tagged/google-cast)
 
 ## How to make contributions?
 Please read and follow the steps in the CONTRIBUTING.md
@@ -60,10 +47,25 @@ See LICENSE
 ## Terms
 Your use of this sample is subject to, and by using or downloading the sample files you agree to comply with, the [Google APIs Terms of Service](https://developers.google.com/terms/) and the [Google Cast SDK Additional Developer Terms of Service](https://developers.google.com/cast/docs/terms/).
 
-## Google+
-Google Cast Developers Community on Google+ [http://goo.gl/TPLDxj](http://goo.gl/TPLDxj)
-
 ## Change List
+
+3.0.0
+ * Removed singleton patterns from VideoCastManager and DataCastManager. Init is performed in this way:
+        CastManagerBuilder.setFactory(new CastManagerFactory() {
+            @Override
+            public BaseCastManager build(Context context, CastConfiguration configuration) {
+                return new MyCastManager(context, configuration);
+            }
+        });
+        CastManagerBuilder.build(getApplicationContext(), new CastConfiguration.Builder(APP_ID)
+                .disableLaunchOnConnect()
+                .....
+                .build());
+ * Code has been updated for Android Oreo
+ * There is a new isConnectedOrConnecting method in the BaseCastManager
+ * It's no more needed to call incrementUiCounter and decrementUiCounter. The library now uses lifecycle aware methods. To simplify
+ the developement, you can extend the classes BaseActivity or BaseCompatActivity
+ * Reworked notifications: added notification channels for Android Oreo and changed icons
 
 2.9.1 (bug fix release)
  * Changed dependency on Cast SDK to 9.8.0 from 9.8.00

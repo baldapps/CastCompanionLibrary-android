@@ -16,21 +16,22 @@
 
 package com.google.android.libraries.cast.companionlibrary.remotecontrol;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions
-        .TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.notification.VideoCastNotificationService;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.view.KeyEvent;
+
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.notification.VideoCastNotificationService;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * A {@link BroadcastReceiver} for receiving media button actions (from the lock screen) as well as
@@ -46,7 +47,7 @@ public class VideoIntentReceiver extends BroadcastReceiver {
         if (action == null) {
             return;
         }
-        VideoCastManager castManager = VideoCastManager.getInstance();
+        VideoCastManager castManager = CastManagerBuilder.getCastManager();
         switch (action) {
             case VideoCastNotificationService.ACTION_TOGGLE_PLAYBACK:
                 try {

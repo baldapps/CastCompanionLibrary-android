@@ -16,16 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.utils;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.MediaQueueItem;
-import com.google.android.gms.cast.MediaTrack;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.images.WebImage;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -35,6 +25,7 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.net.Uri;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -48,6 +39,14 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
+import com.google.android.gms.cast.MediaTrack;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.images.WebImage;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,6 +54,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * A collection of utility methods, all static.
@@ -78,8 +80,7 @@ public final class Utils {
     private static final String KEY_TRACK_LANGUAGE = "track-language";
     private static final String KEY_TRACK_CUSTOM_DATA = "track-custom-data";
     private static final String KEY_TRACKS_DATA = "track-data";
-    public static final boolean IS_KITKAT_OR_ABOVE =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+    public static final boolean IS_KITKAT_OR_ABOVE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
     private Utils() {
     }
@@ -88,7 +89,7 @@ public final class Utils {
      * Formats time from milliseconds to hh:mm:ss string format.
      */
     public static String formatMillis(int millis) {
-        return DateUtils.formatElapsedTime(millis/1000);
+        return DateUtils.formatElapsedTime(millis / 1000);
     }
 
     /**
@@ -131,14 +132,12 @@ public final class Utils {
      * missing, or to system settings if Google Play services is disabled on the device.
      */
     public static boolean checkGooglePlayServices(final Activity activity) {
-        final int googlePlayServicesCheck = GooglePlayServicesUtil.isGooglePlayServicesAvailable(
-                activity);
+        final int googlePlayServicesCheck = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
         switch (googlePlayServicesCheck) {
             case ConnectionResult.SUCCESS:
                 return true;
             default:
-                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(googlePlayServicesCheck,
-                        activity, 0);
+                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(googlePlayServicesCheck, activity, 0);
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialogInterface) {
@@ -163,20 +162,18 @@ public final class Utils {
         }
 
         MediaMetadata md = info.getMetadata();
+        if (md == null) {
+            return null;
+        }
         Bundle wrapper = new Bundle();
         wrapper.putString(MediaMetadata.KEY_TITLE, md.getString(MediaMetadata.KEY_TITLE));
         wrapper.putString(MediaMetadata.KEY_SUBTITLE, md.getString(MediaMetadata.KEY_SUBTITLE));
-        wrapper.putString(MediaMetadata.KEY_ALBUM_TITLE,
-                md.getString(MediaMetadata.KEY_ALBUM_TITLE));
-        wrapper.putString(MediaMetadata.KEY_ALBUM_ARTIST,
-                md.getString(MediaMetadata.KEY_ALBUM_ARTIST));
+        wrapper.putString(MediaMetadata.KEY_ALBUM_TITLE, md.getString(MediaMetadata.KEY_ALBUM_TITLE));
+        wrapper.putString(MediaMetadata.KEY_ALBUM_ARTIST, md.getString(MediaMetadata.KEY_ALBUM_ARTIST));
         wrapper.putString(MediaMetadata.KEY_COMPOSER, md.getString(MediaMetadata.KEY_COMPOSER));
-        wrapper.putString(MediaMetadata.KEY_SERIES_TITLE,
-                md.getString(MediaMetadata.KEY_SERIES_TITLE));
-        wrapper.putInt(MediaMetadata.KEY_SEASON_NUMBER,
-                md.getInt(MediaMetadata.KEY_SEASON_NUMBER));
-        wrapper.putInt(MediaMetadata.KEY_EPISODE_NUMBER,
-                md.getInt(MediaMetadata.KEY_EPISODE_NUMBER));
+        wrapper.putString(MediaMetadata.KEY_SERIES_TITLE, md.getString(MediaMetadata.KEY_SERIES_TITLE));
+        wrapper.putInt(MediaMetadata.KEY_SEASON_NUMBER, md.getInt(MediaMetadata.KEY_SEASON_NUMBER));
+        wrapper.putInt(MediaMetadata.KEY_EPISODE_NUMBER, md.getInt(MediaMetadata.KEY_EPISODE_NUMBER));
         Calendar releaseCalendar = md.getDate(MediaMetadata.KEY_RELEASE_DATE);
         if (releaseCalendar != null) {
             long releaseMillis = releaseCalendar.getTimeInMillis();
@@ -241,22 +238,15 @@ public final class Utils {
 
         MediaMetadata metaData = new MediaMetadata(wrapper.getInt(KEY_MEDIA_TYPE));
 
-        metaData.putString(MediaMetadata.KEY_SUBTITLE,
-                wrapper.getString(MediaMetadata.KEY_SUBTITLE));
+        metaData.putString(MediaMetadata.KEY_SUBTITLE, wrapper.getString(MediaMetadata.KEY_SUBTITLE));
         metaData.putString(MediaMetadata.KEY_TITLE, wrapper.getString(MediaMetadata.KEY_TITLE));
         metaData.putString(MediaMetadata.KEY_STUDIO, wrapper.getString(MediaMetadata.KEY_STUDIO));
-        metaData.putString(MediaMetadata.KEY_ALBUM_ARTIST,
-                wrapper.getString(MediaMetadata.KEY_ALBUM_ARTIST));
-        metaData.putString(MediaMetadata.KEY_ALBUM_TITLE,
-                wrapper.getString(MediaMetadata.KEY_ALBUM_TITLE));
-        metaData.putString(MediaMetadata.KEY_COMPOSER,
-                wrapper.getString(MediaMetadata.KEY_COMPOSER));
-        metaData.putString(MediaMetadata.KEY_SERIES_TITLE,
-                wrapper.getString(MediaMetadata.KEY_SERIES_TITLE));
-        metaData.putInt(MediaMetadata.KEY_SEASON_NUMBER,
-                wrapper.getInt(MediaMetadata.KEY_SEASON_NUMBER));
-        metaData.putInt(MediaMetadata.KEY_EPISODE_NUMBER,
-                wrapper.getInt(MediaMetadata.KEY_EPISODE_NUMBER));
+        metaData.putString(MediaMetadata.KEY_ALBUM_ARTIST, wrapper.getString(MediaMetadata.KEY_ALBUM_ARTIST));
+        metaData.putString(MediaMetadata.KEY_ALBUM_TITLE, wrapper.getString(MediaMetadata.KEY_ALBUM_TITLE));
+        metaData.putString(MediaMetadata.KEY_COMPOSER, wrapper.getString(MediaMetadata.KEY_COMPOSER));
+        metaData.putString(MediaMetadata.KEY_SERIES_TITLE, wrapper.getString(MediaMetadata.KEY_SERIES_TITLE));
+        metaData.putInt(MediaMetadata.KEY_SEASON_NUMBER, wrapper.getInt(MediaMetadata.KEY_SEASON_NUMBER));
+        metaData.putInt(MediaMetadata.KEY_EPISODE_NUMBER, wrapper.getInt(MediaMetadata.KEY_EPISODE_NUMBER));
 
         long releaseDateMillis = wrapper.getLong(MediaMetadata.KEY_RELEASE_DATE, 0);
         if (releaseDateMillis > 0) {
@@ -277,8 +267,7 @@ public final class Utils {
             try {
                 customData = new JSONObject(customDataStr);
             } catch (JSONException e) {
-                LOGE(TAG, "Failed to deserialize the custom data string: custom data= "
-                        + customDataStr);
+                LOGE(TAG, "Failed to deserialize the custom data string: custom data= " + customDataStr);
             }
         }
         List<MediaTrack> mediaTracks = null;
@@ -289,8 +278,8 @@ public final class Utils {
                 if (jsonArray.length() > 0) {
                     for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject jsonObj = (JSONObject) jsonArray.get(i);
-                        MediaTrack.Builder builder = new MediaTrack.Builder(
-                                jsonObj.getLong(KEY_TRACK_ID), jsonObj.getInt(KEY_TRACK_TYPE));
+                        MediaTrack.Builder builder = new MediaTrack.Builder(jsonObj.getLong(KEY_TRACK_ID), jsonObj
+                                .getInt(KEY_TRACK_TYPE));
                         if (jsonObj.has(KEY_TRACK_NAME)) {
                             builder.setName(jsonObj.getString(KEY_TRACK_NAME));
                         }
@@ -307,8 +296,7 @@ public final class Utils {
                             builder.setLanguage(jsonObj.getString(KEY_TRACK_LANGUAGE));
                         }
                         if (jsonObj.has(KEY_TRACKS_DATA)) {
-                            builder.setCustomData(
-                                    new JSONObject(jsonObj.getString(KEY_TRACKS_DATA)));
+                            builder.setCustomData(new JSONObject(jsonObj.getString(KEY_TRACKS_DATA)));
                         }
                         mediaTracks.add(builder.build());
                     }
@@ -317,15 +305,14 @@ public final class Utils {
                 LOGE(TAG, "Failed to build media tracks from the wrapper bundle", e);
             }
         }
-        MediaInfo.Builder mediaBuilder = new MediaInfo.Builder(wrapper.getString(KEY_URL))
-                .setStreamType(wrapper.getInt(KEY_STREAM_TYPE))
+        MediaInfo.Builder mediaBuilder = new MediaInfo.Builder(wrapper.getString(KEY_URL)).setStreamType(wrapper
+                .getInt(KEY_STREAM_TYPE))
                 .setContentType(wrapper.getString(KEY_CONTENT_TYPE))
                 .setMetadata(metaData)
                 .setCustomData(customData)
                 .setMediaTracks(mediaTracks);
 
-        if (wrapper.containsKey(KEY_STREAM_DURATION)
-                && wrapper.getLong(KEY_STREAM_DURATION) >= 0) {
+        if (wrapper.containsKey(KEY_STREAM_DURATION) && wrapper.getLong(KEY_STREAM_DURATION) >= 0) {
             mediaBuilder.setStreamDuration(wrapper.getLong(KEY_STREAM_DURATION));
         }
 
@@ -336,10 +323,13 @@ public final class Utils {
      * Returns the SSID of the wifi connection, or <code>null</code> if there is no wifi.
      */
     public static String getWifiSsid(Context context) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        if (wifiInfo != null) {
-            return wifiInfo.getSSID();
+        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        try {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            if (wifiInfo != null && wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
+                return wifiInfo.getSSID();
+            }
+        } catch (Exception ignored) {
         }
         return null;
     }
@@ -366,8 +356,7 @@ public final class Utils {
 
         RectF targetRect = new RectF(left, top, left + scaledWidth, top + scaledHeight);
 
-        Bitmap.Config config = source.getConfig() == null ? Bitmap.Config.ARGB_8888
-                : source.getConfig();
+        Bitmap.Config config = source.getConfig() == null ? Bitmap.Config.ARGB_8888 : source.getConfig();
         Bitmap destination = Bitmap.createBitmap(newWidth, newHeight, config);
         Canvas canvas = new Canvas(destination);
         canvas.drawBitmap(source, null, targetRect, null);
@@ -379,8 +368,8 @@ public final class Utils {
      * Converts DIP (or DP) to Pixels
      */
     public static int convertDpToPixel(Context context, float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-                context.getResources().getDisplayMetrics());
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources()
+                .getDisplayMetrics());
     }
 
     /**
@@ -406,8 +395,7 @@ public final class Utils {
      * the list to be reloaded. Then, it appends the new item to teh end of the rebuilt list and
      * returns the result.
      */
-    public static MediaQueueItem[] rebuildQueueAndAppend(List<MediaQueueItem> items,
-            MediaQueueItem currentItem) {
+    public static MediaQueueItem[] rebuildQueueAndAppend(List<MediaQueueItem> items, MediaQueueItem currentItem) {
         if (items == null || items.isEmpty()) {
             return new MediaQueueItem[]{currentItem};
         }
@@ -460,7 +448,7 @@ public final class Utils {
      * {@link NullPointerException} otherwise.
      *
      * @param object The object to inspect
-     * @param name A name for the object to be used in the NPE message
+     * @param name   A name for the object to be used in the NPE message
      */
     public static <T> T assertNotNull(T object, String name) {
         if (object == null) {
@@ -474,7 +462,7 @@ public final class Utils {
      * {@link IllegalArgumentException} if it is, otherwise returns the original string.
      *
      * @param string The string to inspect
-     * @param name A name for the string to be used in the NPE message
+     * @param name   A name for the string to be used in the NPE message
      */
     public static String assertNotEmpty(String string, String name) {
         if (TextUtils.isEmpty(string)) {
@@ -488,8 +476,7 @@ public final class Utils {
     @SuppressWarnings("deprecation")
     /**
      * Returns the screen/display size.
-     */
-    public static Point getDisplaySize(Context context) {
+     */ public static Point getDisplaySize(Context context) {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB_MR2) {
@@ -510,8 +497,7 @@ public final class Utils {
             return false;
         }
         for (MediaTrack track : tracks) {
-            if (track.getType() == MediaTrack.TYPE_AUDIO
-                    || track.getType() == MediaTrack.TYPE_TEXT) {
+            if (track.getType() == MediaTrack.TYPE_AUDIO || track.getType() == MediaTrack.TYPE_TEXT) {
                 return true;
             }
         }

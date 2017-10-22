@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="job_reconnect_id">10000</integer>
+    <integer name="job_clear_persistent_info_id">10001</integer>
+</resources>

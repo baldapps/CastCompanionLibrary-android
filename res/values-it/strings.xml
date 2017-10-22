@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright 2015 Google Inc. All rights reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<resources>
+
+    <string name="ccl_version">3.0.0</string>
+    <string name="ccl_media_route_menu_title">Esegui su&#8230;</string>
+    <string name="ccl_live">Live</string>
+    <string name="ccl_cancel">Cancella</string>
+    <string name="ccl_on">Attivo</string>
+    <string name="ccl_off">Spegni</string>
+    <string name="ccl_info_na">Informazioni not disponibili</string>
+    <string name="ccl_pause">Pausa</string>
+    <string name="ccl_play">Avvia</string>
+    <string name="ccl_disconnect">Disconnetti</string>
+    <string name="ccl_none">Nessuno</string>
+
+    <!-- Used in Error Dialog -->
+    <string name="ccl_ok">OK</string>
+
+    <!-- Title of the Error Dialog -->
+    <string name="ccl_error">Errore</string>
+
+    <!-- Shown in VideoCastController Activity -->
+    <string name="ccl_casting_to_device">Casting su %1$s</string>
+    <string name="ccl_loading">Caricamento&#8230;</string>
+
+    <!-- Used in Router Controller Dialog -->
+    <string name="ccl_no_media_info">Nessuna informazione multimediale disponibile</string>
+
+    <!-- onApplicationConnectionFailed() errors -->
+    <string name="ccl_failed_to_launch_app">Lancio app fallito</string>
+    <string name="ccl_failed_app_launch_timeout">La richiesta di lancio app è fallita per timeout</string>
+    <string name="ccl_failed_to_find_app">L\'app che stai provando a lanciare non è disponibile sul dispositivo cast</string>
+
+    <!-- Error messages for the play.pause in mini player -->
+    <string name="ccl_failed_to_play">Avvio fallito</string>
+    <string name="ccl_failed_to_stop">Stop fallito</string>
+    <string name="ccl_failed_to_pause">Pausa fallita</string>
+
+    <!-- Failures -->
+    <string name="ccl_failed_to_connect">Impossibile connettersi al dispositvo</string>
+    <string name="ccl_failed_setting_volume">Impossibile impostare il volume</string>
+    <string name="ccl_failed_no_connection">Nessuna connessione al dispositivo cast</string>
+    <string name="ccl_failed_no_connection_short">Nessuna connessione</string>
+    <string name="ccl_failed_no_connection_trans">La connessione al dispositivo cast è interrotta. L\'app sta provando a ristabilire la connessione, se possibile. Attendi alcuni secondi e prova ancora.</string>
+    <string name="ccl_failed_perform_action">Azione fallita</string>
+    <string name="ccl_failed_status_request">Sincronizzazione con il dispositivo cast fallita</string>
+    <string name="ccl_failed_seek">Spostamento alla nuova posizione fallita</string>
+    <string name="ccl_failed_receiver_player_error">Il player ha ricevuto un errore grave</string>
+    <string name="ccl_failed_authorization_timeout">Autorizzazione scaduta</string>
+    <string name="ccl_failed_to_set_track_style">Aggiornamento dei sottotitoli fallita</string>
+    <string name="ccl_failed_to_load_media">Caricamento media fallito</string>
+
+    <!-- Upcoming item in a queue with autoplay/preload -->
+    <string name="ccl_mini_upnext">Up Next</string>
+
+    <!-- Notification Actions -->
+    <string name="ccl_skip_next">Salta al prossimo</string>
+    <string name="ccl_skip_previous">Salta al precedente</string>
+    <string name="ccl_forward">Avanti</string>
+    <string name="ccl_rewind">Indietro</string>
+
+    <!-- Introductory Overlay -->
+    <string name="ccl_intro_overlay_button_text">@android:string/ok</string>
+
+    <string name="cast_channel">Notifiche di streaming</string>
+</resources>

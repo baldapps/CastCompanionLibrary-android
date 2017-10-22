@@ -16,17 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.reconnection;
 
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
-import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
-
-import com.google.android.libraries.cast.companionlibrary.cast.BaseCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -37,10 +26,23 @@ import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.os.SystemClock;
 
+import com.google.android.libraries.cast.companionlibrary.cast.BaseCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
+import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGE;
 
 /**
  * A service to run in the background when the playback of a media starts, to help with reconnection
@@ -74,7 +76,7 @@ public class ReconnectionService extends Service {
     @Override
     public void onCreate() {
         LOGD(TAG, "onCreate() is called");
-        mCastManager = VideoCastManager.getInstance();
+        mCastManager = CastManagerBuilder.getCastManager();
         if (!mCastManager.isConnected() && !mCastManager.isConnecting()) {
             mCastManager.reconnectSessionIfPossible();
         }
@@ -199,7 +201,7 @@ public class ReconnectionService extends Service {
             stopSelf();
         } else {
             // since we are connected and our timer has gone off, lets update the time remaining
-            // on the media (since media may have been paused) and reset teh time left
+            // on the media (since media may have been paused) and reset the time left
             long timeLeft = 0;
             try {
                 timeLeft = mCastManager.isRemoteStreamLive() ? 0

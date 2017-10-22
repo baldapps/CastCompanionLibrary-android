@@ -16,19 +16,6 @@
 
 package com.google.android.libraries.cast.companionlibrary.widgets;
 
-import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.MediaQueueItem;
-import com.google.android.gms.cast.MediaStatus;
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
-import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -43,6 +30,20 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
+import com.google.android.gms.cast.MediaStatus;
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
+import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
+import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
 /**
  * A compound component that provides a superset of functionalities required for the global access
@@ -109,7 +110,7 @@ public class MiniController extends RelativeLayout implements IMiniController {
         mStopDrawable = getResources().getDrawable(R.drawable.ic_mini_controller_stop);
         mHandler = new Handler();
         if (!isInEditMode()) {
-            mCastManager = VideoCastManager.getInstance();
+            mCastManager = CastManagerBuilder.getCastManager();
         }
         loadViews();
         setUpCallbacks();
@@ -382,15 +383,15 @@ public class MiniController extends RelativeLayout implements IMiniController {
     }
 
     private void loadViews() {
-        mIcon = (ImageView) findViewById(R.id.icon_view);
-        mTitle = (TextView) findViewById(R.id.title_view);
-        mSubTitle = (TextView) findViewById(R.id.subtitle_view);
-        mPlayPause = (ImageView) findViewById(R.id.play_pause);
-        mLoading = (ProgressBar) findViewById(R.id.loading_view);
+        mIcon = findViewById(R.id.icon_view);
+        mTitle = findViewById(R.id.title_view);
+        mSubTitle = findViewById(R.id.subtitle_view);
+        mPlayPause = findViewById(R.id.play_pause);
+        mLoading = findViewById(R.id.loading_view);
         mMainContainer = findViewById(R.id.container_current);
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mUpcomingIcon = (ImageView) findViewById(R.id.icon_view_upcoming);
-        mUpcomingTitle = (TextView) findViewById(R.id.title_view_upcoming);
+        mProgressBar = findViewById(R.id.progressBar);
+        mUpcomingIcon = findViewById(R.id.icon_view_upcoming);
+        mUpcomingTitle = findViewById(R.id.title_view_upcoming);
         mUpcomingContainer = findViewById(R.id.container_upcoming);
         mUpcomingPlay = findViewById(R.id.play_upcoming);
         mUpcomingStop = findViewById(R.id.stop_upcoming);
