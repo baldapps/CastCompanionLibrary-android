@@ -14,7 +14,7 @@ Set up the project dependencies. To use this library in your project, you have t
 (1) Use the GitHub source and include that as a module dependency by following these steps:
  * Clone this library into a project named CastCompanionLibrary, parallel to your own application project:
 ```shell
-git clone https://github.com/googlecast/CastCompanionLibrary-android.git CastCompanionLibrary
+git clone https://github.com/baldapps/CastCompanionLibrary-android.git CastCompanionLibrary
 ```
  * In the root of your application's project edit the file "settings.gradle" and add the following lines:
 ```shell
@@ -51,6 +51,7 @@ Your use of this sample is subject to, and by using or downloading the sample fi
 
 3.0.0
  * Removed singleton patterns from VideoCastManager and DataCastManager. Init is performed in this way:
+```java
         CastManagerBuilder.setFactory(new CastManagerFactory() {
             @Override
             public BaseCastManager build(Context context, CastConfiguration configuration) {
@@ -61,6 +62,7 @@ Your use of this sample is subject to, and by using or downloading the sample fi
                 .disableLaunchOnConnect()
                 .....
                 .build());
+```
  * Code has been updated for Android Oreo
  * There is a new isConnectedOrConnecting method in the BaseCastManager
  * It's no more needed to call incrementUiCounter and decrementUiCounter. The library now uses lifecycle aware methods. To simplify
