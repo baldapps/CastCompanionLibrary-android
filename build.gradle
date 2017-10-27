@@ -19,7 +19,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath 'com.android.tools.build:gradle:3.0.0'
     }
 }
 
@@ -39,7 +39,7 @@ ext {
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    buildToolsVersion "26.0.2"
     publishNonDefault true
 
     defaultConfig {
@@ -58,8 +58,8 @@ android {
     buildTypes {
         debug {
             libraryVariants.all { variant ->
-                variant.outputs.each { output ->
-                    output.outputFile = new File(output.outputFile.parent, output.outputFile.name.
+                variant.outputs.all { output ->
+                    outputFileName = new File(output.outputFile.parent, outputFileName.
                             replace(".aar", "-${versionName}.aar"))
                 }
             }
