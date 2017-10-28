@@ -44,11 +44,11 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
     /**
      * Constructs a new FetchBitmapTask that will do in-sampling and scaling, if needed.
      *
-     * @param preferredWidth The preferred image width.
+     * @param preferredWidth  The preferred image width.
      * @param preferredHeight The preferred image height.
-     * @param allowedToScale If {@code true}, the resulting bitmap will be scaled to match the
-     * preferred dimensions while keeping the aspect ratio. Otherwise, no additional scaling will
-     * be performed.
+     * @param allowedToScale  If {@code true}, the resulting bitmap will be scaled to match the
+     *                        preferred dimensions while keeping the aspect ratio. Otherwise, no additional scaling will
+     *                        be performed.
      */
     public FetchBitmapTask(int preferredWidth, int preferredHeight, boolean allowedToScale) {
         mPreferredWidth = preferredWidth;
@@ -59,9 +59,8 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
     /**
      * Constructs a new FetchBitmapTask that will do in-sampling but no scaling.
      *
-     * @param preferredWidth The preferred image width.
+     * @param preferredWidth  The preferred image width.
      * @param preferredHeight The preferred image height.
-     *
      * @see FetchBitmapTask#FetchBitmapTask(int, int, boolean)
      */
     public FetchBitmapTask(int preferredWidth, int preferredHeight) {
@@ -102,8 +101,8 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
             // only adjust the options to download the resized version.
             Point originalSize = calculateOriginalDimensions(url);
             if (originalSize.x > 0 && originalSize.y > 0) {
-                options.inSampleSize = calculateInSampleSize(originalSize.x, originalSize.y,
-                        mPreferredWidth, mPreferredHeight);
+                options.inSampleSize = calculateInSampleSize(originalSize.x, originalSize.y, mPreferredWidth,
+                        mPreferredHeight);
             }
         }
         HttpURLConnection urlConnection = null;
@@ -140,11 +139,7 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void execute(Uri uri) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uri);
-        } else {
-            execute(new Uri[] {uri});
-        }
+        executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, uri);
     }
 
     /*
@@ -210,8 +205,7 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
      * Find the appropriate in-sample-size (as an inverse power of 2) to help reduce the size of
      * downloaded image.
      */
-    private int calculateInSampleSize(int originalWidth, int originalHeight,
-            int reqWidth, int reqHeight) {
+    private int calculateInSampleSize(int originalWidth, int originalHeight, int reqWidth, int reqHeight) {
         // Raw height and width of image
         int inSampleSize = 1;
 
@@ -222,8 +216,7 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
 
             // Calculate the largest inSampleSize value that is a power of 2 and keeps both
             // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight
-                    && (halfWidth / inSampleSize) > reqWidth) {
+            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth) {
                 inSampleSize *= 2;
             }
         }

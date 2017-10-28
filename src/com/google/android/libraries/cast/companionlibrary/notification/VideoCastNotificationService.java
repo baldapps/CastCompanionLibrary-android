@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -173,6 +174,10 @@ public class VideoCastNotificationService extends Service {
             }
         }
         mForwardTimeInMillis = TimeUnit.SECONDS.toMillis(mCastManager.getCastConfiguration().getForwardStep());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setUpNotification();
+            startForeground(NOTIFICATION_ID, mNotification);
+        }
     }
 
     @Override
@@ -206,6 +211,21 @@ public class VideoCastNotificationService extends Service {
         }
 
         return Service.START_STICKY;
+    }
+
+    private void setUpNotification() {
+        String castingTo = getResources().getString(R.string.ccl_casting_to_device, mCastManager.getDeviceName());
+        createNotificationChannel(this);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "cast").setSmallIcon(R.drawable
+                .ic_stat_action_notification)
+                .setContentTitle(getString(R.string.ccl_notification_connecting))
+                .setContentText(castingTo)
+                .setContentIntent(getContentIntent(null))
+                .setColor(getColor(R.color.ccl_notification_color))
+                .setOngoing(true)
+                .setShowWhen(false)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        mNotification = builder.build();
     }
 
     private void setUpNotification(final MediaInfo info) throws TransientNetworkDisconnectionException,
@@ -251,8 +271,9 @@ public class VideoCastNotificationService extends Service {
      * Removes the existing notification.
      */
     private void removeNotification() {
-        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).
-                cancel(NOTIFICATION_ID);
+        NotificationManager mng = ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE));
+        if (mng != null)
+            mng.cancel(NOTIFICATION_ID);
     }
 
     protected void onRemoteMediaPlayerStatusUpdated(int mediaStatus) {
@@ -320,7 +341,8 @@ public class VideoCastNotificationService extends Service {
             channel.enableVibration(false);
             channel.enableLights(false);
             channel.setShowBadge(false);
-            manager.createNotificationChannel(channel);
+            if (manager != null)
+                manager.createNotificationChannel(channel);
         }
     }
 
@@ -502,14 +524,19 @@ public class VideoCastNotificationService extends Service {
      * clicking on the Back button would allow navigation into the app.
      */
     protected PendingIntent getContentIntent(MediaInfo mediaInfo) {
-        Bundle mediaWrapper = Utils.mediaInfoToBundle(mediaInfo);
         Intent contentIntent = new Intent(this, mTargetActivity);
-        contentIntent.putExtra(VideoCastManager.EXTRA_MEDIA, mediaWrapper);
+        Bundle mediaWrapper = null;
+        if (mediaInfo != null) {
+            mediaWrapper = Utils.mediaInfoToBundle(mediaInfo);
+            contentIntent.putExtra(VideoCastManager.EXTRA_MEDIA, mediaWrapper);
+        }
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addParentStack(mTargetActivity);
         stackBuilder.addNextIntent(contentIntent);
-        if (stackBuilder.getIntentCount() > 1) {
-            stackBuilder.editIntentAt(1).putExtra(VideoCastManager.EXTRA_MEDIA, mediaWrapper);
+        if (mediaWrapper != null && stackBuilder.getIntentCount() > 1) {
+            Intent i = stackBuilder.editIntentAt(1);
+            if (i != null)
+                i.putExtra(VideoCastManager.EXTRA_MEDIA, mediaWrapper);
         }
         return stackBuilder.getPendingIntent(NOTIFICATION_ID, PendingIntent.FLAG_UPDATE_CURRENT);
     }
