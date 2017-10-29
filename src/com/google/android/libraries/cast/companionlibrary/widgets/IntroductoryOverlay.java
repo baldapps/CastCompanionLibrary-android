@@ -16,12 +16,10 @@
 
 package com.google.android.libraries.cast.companionlibrary.widgets;
 
-import com.google.android.libraries.cast.companionlibrary.R;
-import com.google.android.libraries.cast.companionlibrary.utils.Utils;
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -52,6 +50,9 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.libraries.cast.companionlibrary.R;
+import com.google.android.libraries.cast.companionlibrary.utils.Utils;
+
 /**
  * A simple overlay view that can be used to bring user's attention to the cast button. To use
  * this overlay, build an instance of this class and call {@link #show()}:
@@ -76,6 +77,8 @@ import android.widget.TextView;
  * {@link com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCastConsumer#onCastAvailabilityChanged(boolean)}.
  * Management of how often this overlay should be shown is left to the client application.
  */
+@SuppressLint("ViewConstructor")
+@SuppressWarnings("unused")
 public class IntroductoryOverlay extends RelativeLayout {
 
     private static final long FADE_OUT_LENGTH_MS = 400;
@@ -85,7 +88,7 @@ public class IntroductoryOverlay extends RelativeLayout {
     private TextView mSubtitleText;
     private Button mButton;
     private float mFocusRadius;
-    private int mOverlayColorId;
+    private int mOverlayColor;
     private int mCenterY;
     private int mCenterX;
     private Paint mHolePaint;
@@ -99,22 +102,21 @@ public class IntroductoryOverlay extends RelativeLayout {
         this(builder, null, R.styleable.CustomTheme_CCLIntroOverlayStyle);
     }
 
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public IntroductoryOverlay(Builder builder, AttributeSet attrs, int defStyleAttr) {
         super(builder.mContext, attrs, defStyleAttr);
         mIsSingleTime = builder.mSingleTime;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         inflater.inflate(R.layout.ccl_intro_overlay, this);
-        mButton = (Button) findViewById(R.id.button);
-        mTitleText = (TextView) findViewById(R.id.textTitle);
-        mSubtitleText = (TextView) findViewById(R.id.textSubtitle);
+        mButton = findViewById(R.id.button);
+        mTitleText = findViewById(R.id.textTitle);
+        mSubtitleText = findViewById(R.id.textSubtitle);
         TypedArray typedArray = getContext().getTheme()
                 .obtainStyledAttributes(attrs, R.styleable.CCLIntroOverlay,
                         R.attr.CCLIntroOverlayStyle, R.style.CCLIntroOverlay);
         if (builder.mOverlayColor != 0) {
-            mOverlayColorId = builder.mOverlayColor;
+            mOverlayColor = builder.mOverlayColor;
         } else {
-            mOverlayColorId = typedArray
+            mOverlayColor = typedArray
                     .getColor(R.styleable.CCLIntroOverlay_ccl_IntroBackgroundColor,
                             Color.argb(0, 0, 0, 0));
         }
@@ -212,18 +214,18 @@ public class IntroductoryOverlay extends RelativeLayout {
     protected void dispatchDraw(Canvas canvas) {
         mBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas2 = new Canvas(mBitmap);
-        canvas2.drawColor(mOverlayColorId);
+        canvas2.drawColor(mOverlayColor);
         canvas2.drawCircle(mCenterX, mCenterY, mFocusRadius, mHolePaint);
         canvas.drawBitmap(mBitmap, 0, 0, null);
         super.dispatchDraw(canvas);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return true;
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void fadeOut(long duration) {
         ObjectAnimator oa = ObjectAnimator.ofFloat(this, ALPHA_PROPERTY, INVISIBLE_VALUE);
         oa.setDuration(duration).addListener(new AnimatorListenerAdapter() {
@@ -255,10 +257,10 @@ public class IntroductoryOverlay extends RelativeLayout {
     /**
      * The builder class that is used to instantiate an instance of {@link IntroductoryOverlay}
      */
+    @SuppressWarnings("unused")
     public static class Builder {
         private Context mContext;
 
-        @ColorRes
         private float mRadius;
         private String mButtonText;
         private String mTitleText;
