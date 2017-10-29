@@ -224,6 +224,7 @@ public class VideoCastNotificationService extends Service {
                 .setColor(getColor(R.color.ccl_notification_color))
                 .setOngoing(true)
                 .setShowWhen(false)
+                .addAction(getDisconnectAction())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         mNotification = builder.build();
     }
