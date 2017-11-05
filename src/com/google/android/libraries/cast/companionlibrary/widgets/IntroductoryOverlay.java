@@ -212,6 +212,10 @@ public class IntroductoryOverlay extends RelativeLayout {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        if (getWidth() == 0 || getHeight() == 0) {
+            super.dispatchDraw(canvas);
+            return;
+        }
         mBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas2 = new Canvas(mBitmap);
         canvas2.drawColor(mOverlayColor);
