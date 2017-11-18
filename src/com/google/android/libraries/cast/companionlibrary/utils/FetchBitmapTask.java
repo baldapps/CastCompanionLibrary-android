@@ -118,7 +118,7 @@ public abstract class FetchBitmapTask extends AsyncTask<Uri, Void, Bitmap> {
                     bitmap = scaleBitmap(bitmap);
                 }
             }
-        } catch (IOException e) { /* ignore */
+        } catch (Exception e) { /* ignore */
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
