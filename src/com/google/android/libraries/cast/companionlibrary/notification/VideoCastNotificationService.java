@@ -366,7 +366,6 @@ public class VideoCastNotificationService extends Service {
                 .setContentTitle(metadata.getString(MediaMetadata.KEY_TITLE))
                 .setContentText(castingTo)
                 .setContentIntent(getContentIntent(info))
-                .setColor(getColor(R.color.ccl_notification_color))
                 .setLargeIcon(bitmap)
                 .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(mNotificationCompactActionsArray)
@@ -375,6 +374,11 @@ public class VideoCastNotificationService extends Service {
                 .setShowWhen(false)
                 .setColorized(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            builder.setColor(getColor(R.color.ccl_notification_color));
+        } else {
+            builder.setColor(getResources().getColor(R.color.ccl_notification_color));
+        }
 
         for (Integer notificationType : mNotificationActions) {
             switch (notificationType) {
