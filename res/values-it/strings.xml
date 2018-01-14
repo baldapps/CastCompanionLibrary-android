@@ -78,5 +78,5 @@
     <string name="ccl_intro_overlay_button_text">@android:string/ok</string>
 
     <string name="cast_channel">Notifiche di streaming</string>
-    <string name="ccl_notification_connecting">Connessione&#8230;</string>
+    <string name="ccl_notification_waiting">In attesa</string>
 </resources>

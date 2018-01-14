@@ -28,9 +28,16 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.ContextCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaQueueItem;
@@ -45,7 +52,6 @@ import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastEx
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
 import com.google.android.libraries.cast.companionlibrary.remotecontrol.VideoIntentReceiver;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
 import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
 import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
@@ -82,7 +88,6 @@ public class VideoCastNotificationService extends Service {
     private static final long TEN_SECONDS_MILLIS = TimeUnit.SECONDS.toMillis(10);
     private static final long THIRTY_SECONDS_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
-    private Bitmap mVideoArtBitmap;
     private boolean mIsPlaying;
     private Class<?> mTargetActivity;
     private int mOldStatus = -1;
@@ -90,20 +95,42 @@ public class VideoCastNotificationService extends Service {
     private boolean mVisible;
     protected VideoCastManager mCastManager;
     private VideoCastConsumerImpl mConsumer;
-    private FetchBitmapTask mBitmapDecoderTask;
     private int mDimensionInPixels;
     private boolean mHasNext;
     private boolean mHasPrev;
     private List<Integer> mNotificationActions;
     private int[] mNotificationCompactActionsArray;
     private long mForwardTimeInMillis;
+    private MediaInfo mediaInfo;
+    private boolean isServiceIdle;
+    private SimpleTarget<Bitmap> bitmapTarget = new SimpleTarget<Bitmap>() {
+        @Override
+        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+            try {
+                build(mediaInfo, resource, mIsPlaying);
+            } catch (CastException | NoConnectionException | TransientNetworkDisconnectionException e) {
+                LOGE(TAG, "Failed to set notification", e);
+            } finally {
+                //Clean reference to media info we took waiting for the callback
+                mediaInfo = null;
+            }
+            if (mVisible && (mNotification != null)) {
+                serviceActive();
+            }
+        }
+    };
 
     @Override
     public void onCreate() {
+        LOGD(TAG, "cast notification created");
         super.onCreate();
+        mCastManager = CastManagerBuilder.getCastManager();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setUpNotification();
+            startForeground(NOTIFICATION_ID, mNotification);
+        }
         mDimensionInPixels = Utils.convertDpToPixel(VideoCastNotificationService.this, getResources().getDimension(R
                 .dimen.ccl_notification_image_size));
-        mCastManager = CastManagerBuilder.getCastManager();
         readPersistedData();
         if (!mCastManager.isConnected() && !mCastManager.isConnecting()) {
             mCastManager.reconnectSessionIfPossible();
@@ -118,12 +145,13 @@ public class VideoCastNotificationService extends Service {
         mConsumer = new VideoCastConsumerImpl() {
             @Override
             public void onApplicationDisconnected(int errorCode) {
-                LOGD(TAG, "onApplicationDisconnected() was reached, stopping the notification" + " service");
+                LOGD(TAG, "onApplicationDisconnected() was reached, stopping the notification service");
                 stopSelf();
             }
 
             @Override
             public void onDisconnected() {
+                LOGD(TAG, "onDisconnected stopping service");
                 stopSelf();
             }
 
@@ -135,6 +163,7 @@ public class VideoCastNotificationService extends Service {
 
             @Override
             public void onUiVisibilityChanged(boolean visible) {
+                LOGD(TAG, "on ui visibility change now is visible: " + visible);
                 mVisible = !visible;
 
                 if (mNotification == null) {
@@ -144,10 +173,10 @@ public class VideoCastNotificationService extends Service {
                         LOGE(TAG, "onStartCommand() failed to get media", e);
                     }
                 }
-                if (mVisible && (mNotification != null)) {
-                    startForeground(NOTIFICATION_ID, mNotification);
+                if (mVisible && mNotification != null) {
+                    serviceActive();
                 } else {
-                    stopForeground(true);
+                    serviceIdle();
                 }
             }
 
@@ -174,10 +203,6 @@ public class VideoCastNotificationService extends Service {
             }
         }
         mForwardTimeInMillis = TimeUnit.SECONDS.toMillis(mCastManager.getCastConfiguration().getForwardStep());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            setUpNotification();
-            startForeground(NOTIFICATION_ID, mNotification);
-        }
     }
 
     @Override
@@ -189,7 +214,6 @@ public class VideoCastNotificationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         LOGD(TAG, "onStartCommand");
         if (intent != null) {
-
             String action = intent.getAction();
             if (ACTION_VISIBILITY.equals(action)) {
                 mVisible = intent.getBooleanExtra(NOTIFICATION_VISIBILITY, false);
@@ -203,9 +227,9 @@ public class VideoCastNotificationService extends Service {
                     }
                 }
                 if (mVisible && mNotification != null) {
-                    startForeground(NOTIFICATION_ID, mNotification);
+                    serviceActive();
                 } else {
-                    stopForeground(true);
+                    serviceIdle();
                 }
             }
         }
@@ -218,10 +242,10 @@ public class VideoCastNotificationService extends Service {
         createNotificationChannel(this);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "cast").setSmallIcon(R.drawable
                 .ic_stat_action_notification)
-                .setContentTitle(getString(R.string.ccl_notification_connecting))
+                .setContentTitle(getString(R.string.ccl_notification_waiting))
                 .setContentText(castingTo)
                 .setContentIntent(getContentIntent(null))
-                .setColor(getColor(R.color.ccl_notification_color))
+                .setColor(ContextCompat.getColor(this, R.color.ccl_notification_color))
                 .setOngoing(true)
                 .setShowWhen(false)
                 .addAction(getDisconnectAction())
@@ -234,38 +258,18 @@ public class VideoCastNotificationService extends Service {
         if (info == null) {
             return;
         }
-        if (mBitmapDecoderTask != null) {
-            mBitmapDecoderTask.cancel(false);
-        }
-        Uri imgUri = null;
-        try {
-            if (!info.getMetadata().hasImages()) {
+        mediaInfo = info;
+        if (!info.getMetadata().hasImages()) {
+            try {
                 build(info, null, mIsPlaying);
-                return;
-            } else {
-                imgUri = info.getMetadata().getImages().get(0).getUrl();
+            } catch (CastException e) {
+                LOGE(TAG, "Failed to build notification", e);
             }
-        } catch (CastException e) {
-            LOGE(TAG, "Failed to build notification", e);
+        } else {
+            Uri imgUri = info.getMetadata().getImages().get(0).getUrl();
+            RequestOptions options = new RequestOptions().override(mDimensionInPixels, mDimensionInPixels).centerCrop();
+            Glide.with(getApplicationContext()).asBitmap().load(imgUri).apply(options).into(bitmapTarget);
         }
-        mBitmapDecoderTask = new FetchBitmapTask() {
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                try {
-                    mVideoArtBitmap = Utils.scaleAndCenterCropBitmap(bitmap, mDimensionInPixels, mDimensionInPixels);
-                    build(info, mVideoArtBitmap, mIsPlaying);
-                } catch (CastException | NoConnectionException | TransientNetworkDisconnectionException e) {
-                    LOGE(TAG, "Failed to set notification for " + info.toString(), e);
-                }
-                if (mVisible && (mNotification != null)) {
-                    startForeground(NOTIFICATION_ID, mNotification);
-                }
-                if (this == mBitmapDecoderTask) {
-                    mBitmapDecoderTask = null;
-                }
-            }
-        };
-        mBitmapDecoderTask.execute(imgUri);
     }
 
     /**
@@ -275,6 +279,12 @@ public class VideoCastNotificationService extends Service {
         NotificationManager mng = ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE));
         if (mng != null)
             mng.cancel(NOTIFICATION_ID);
+    }
+
+    private void updateNotification() {
+        NotificationManager mng = ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE));
+        if (mng != null)
+            mng.notify(NOTIFICATION_ID, mNotification);
     }
 
     protected void onRemoteMediaPlayerStatusUpdated(int mediaStatus) {
@@ -301,14 +311,14 @@ public class VideoCastNotificationService extends Service {
                 case MediaStatus.PLAYER_STATE_IDLE: // (== 1)
                     mIsPlaying = false;
                     if (!mCastManager.shouldRemoteUiBeVisible(mediaStatus, mCastManager.getIdleReason())) {
-                        stopForeground(true);
+                        serviceIdle();
                     } else {
                         setUpNotification(mCastManager.getRemoteMediaInformation());
                     }
                     break;
                 case MediaStatus.PLAYER_STATE_UNKNOWN: // (== 0)
                     mIsPlaying = false;
-                    stopForeground(true);
+                    serviceIdle();
                     break;
                 default:
                     break;
@@ -318,15 +328,55 @@ public class VideoCastNotificationService extends Service {
         }
     }
 
+    /**
+     * On android 8+ the notification is kept always, so we just
+     * need to update its content. On older versions we should restore
+     * the foreground status and the notification will be posted
+     * again.
+     */
+    private void serviceActive() {
+        if (mNotification == null)
+            return;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            /*
+             * If service was idle we can start foreground, if it
+             * was already active update notification.
+             */
+            if (isServiceIdle) {
+                isServiceIdle = false;
+                startForeground(NOTIFICATION_ID, mNotification);
+            } else
+                updateNotification();
+        } else {
+            isServiceIdle = false;
+            updateNotification();
+        }
+    }
+
+    /**
+     * On android 8+ the notification is kept always, so we just
+     * need to reset its content to the default idle state.
+     * On older versions we remove the foreground status and
+     * the notification is removed.
+     */
+    private void serviceIdle() {
+        isServiceIdle = true;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            stopForeground(true);
+        } else {
+            setUpNotification();
+            updateNotification();
+        }
+    }
+
     /*
      * (non-Javadoc)
      * @see android.app.Service#onDestroy()
      */
     @Override
     public void onDestroy() {
-        if (mBitmapDecoderTask != null) {
-            mBitmapDecoderTask.cancel(false);
-        }
+        LOGD(TAG, "on destroy called");
+        Glide.with(getApplicationContext()).clear(bitmapTarget);
         removeNotification();
         if (mCastManager != null && mConsumer != null) {
             mCastManager.removeVideoCastConsumer(mConsumer);
@@ -373,12 +423,8 @@ public class VideoCastNotificationService extends Service {
                 .setOngoing(true)
                 .setShowWhen(false)
                 .setColorized(true)
+                .setColor(ContextCompat.getColor(this, R.color.ccl_notification_color))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            builder.setColor(getColor(R.color.ccl_notification_color));
-        } else {
-            builder.setColor(getResources().getColor(R.color.ccl_notification_color));
-        }
 
         for (Integer notificationType : mNotificationActions) {
             switch (notificationType) {

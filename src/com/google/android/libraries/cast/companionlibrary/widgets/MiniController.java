@@ -19,7 +19,6 @@ package com.google.android.libraries.cast.companionlibrary.widgets;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
@@ -31,6 +30,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaQueueItem;
@@ -42,7 +42,6 @@ import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastEx
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
 import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
 /**
@@ -86,7 +85,6 @@ public class MiniController extends RelativeLayout implements IMiniController {
     private Drawable mPlayDrawable;
     private int mStreamType = MediaInfo.STREAM_TYPE_BUFFERED;
     private Drawable mStopDrawable;
-    private FetchBitmapTask mFetchBitmapTask;
     private ProgressBar mProgressBar;
     private ImageView mUpcomingIcon;
     private TextView mUpcomingTitle;
@@ -94,9 +92,10 @@ public class MiniController extends RelativeLayout implements IMiniController {
     private View mUpcomingPlay;
     private View mUpcomingStop;
     private Uri mUpcomingIconUri;
-    private FetchBitmapTask mFetchUpcomingBitmapTask;
     private View mMainContainer;
     private MediaQueueItem mUpcomingItem;
+    private static final String TAG_UPCOMING = "upcoming";
+    private static final String TAG_ICON = "icon";
 
     public MiniController(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -285,24 +284,7 @@ public class MiniController extends RelativeLayout implements IMiniController {
         }
 
         mIconUri = uri;
-        if (mFetchBitmapTask != null) {
-            mFetchBitmapTask.cancel(true);
-        }
-        mFetchBitmapTask = new FetchBitmapTask() {
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                if (bitmap == null) {
-                    bitmap = BitmapFactory.decodeResource(getResources(),
-                            R.drawable.album_art_placeholder);
-                }
-                setIcon(bitmap);
-                if (this == mFetchBitmapTask) {
-                    mFetchBitmapTask = null;
-                }
-            }
-        };
-
-        mFetchBitmapTask.execute(uri);
+        Glide.with(this).load(uri).into(mIcon);
     }
 
     @Override
@@ -316,10 +298,6 @@ public class MiniController extends RelativeLayout implements IMiniController {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        if (mFetchBitmapTask != null) {
-            mFetchBitmapTask.cancel(true);
-            mFetchBitmapTask = null;
-        }
         if (mAutoSetup && !isInEditMode()) {
             mCastManager.removeMiniController(this);
         }
@@ -418,24 +396,7 @@ public class MiniController extends RelativeLayout implements IMiniController {
         }
 
         mUpcomingIconUri = uri;
-        if (mFetchUpcomingBitmapTask != null) {
-            mFetchUpcomingBitmapTask.cancel(true);
-        }
-        mFetchUpcomingBitmapTask = new FetchBitmapTask() {
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                if (bitmap == null) {
-                    bitmap = BitmapFactory.decodeResource(getResources(),
-                            R.drawable.album_art_placeholder);
-                }
-                setUpcomingIcon(bitmap);
-                if (this == mFetchUpcomingBitmapTask) {
-                    mFetchUpcomingBitmapTask = null;
-                }
-            }
-        };
-
-        mFetchUpcomingBitmapTask.execute(uri);
+        Glide.with(this).load(uri).into(mUpcomingIcon);
     }
 
     private void setUpcomingTitle(String title) {

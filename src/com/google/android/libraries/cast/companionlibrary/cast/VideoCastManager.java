@@ -33,6 +33,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceScreen;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -42,6 +43,10 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.accessibility.CaptioningManager;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.Cast.CastOptions.Builder;
@@ -73,7 +78,6 @@ import com.google.android.libraries.cast.companionlibrary.cast.tracks.OnTracksSe
 import com.google.android.libraries.cast.companionlibrary.cast.tracks.TracksPreferenceManager;
 import com.google.android.libraries.cast.companionlibrary.notification.VideoCastNotificationService;
 import com.google.android.libraries.cast.companionlibrary.remotecontrol.VideoIntentReceiver;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
 import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
 import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 import com.google.android.libraries.cast.companionlibrary.widgets.IMiniController;
@@ -146,8 +150,8 @@ public class VideoCastManager extends BaseCastManager
     private TracksPreferenceManager mTrackManager;
     private MediaQueue mMediaQueue;
     private MediaStatus mMediaStatus;
-    private FetchBitmapTask mLockScreenFetchTask;
-    private FetchBitmapTask mMediaSessionIconFetchTask;
+    private ImageTarget iconTarget = new ImageTarget(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON);
+    private ImageTarget artTarget = new ImageTarget(MediaMetadataCompat.METADATA_KEY_ART);
 
     /**
      * Volume can be controlled at two different layers, one is at the "stream" level and one at
@@ -756,9 +760,9 @@ public class VideoCastManager extends BaseCastManager
      * if the notification feature has been enabled during the initialization.
      * @see {@link BaseCastManager#enableFeatures()}
      */
-    private boolean startNotificationService() {
+    private void startNotificationService() {
         if (!isFeatureEnabled(CastConfiguration.FEATURE_NOTIFICATION)) {
-            return true;
+            return;
         }
         LOGD(TAG, "startNotificationService()");
         Intent service = new Intent(mContext, mNotificationServiceClass);
@@ -766,12 +770,13 @@ public class VideoCastManager extends BaseCastManager
         service.setAction(VideoCastNotificationService.ACTION_VISIBILITY);
         service.putExtra(VideoCastNotificationService.NOTIFICATION_VISIBILITY, !mUiVisible);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mUiVisible) {
-            return mContext.startForegroundService(service) != null;
+            mContext.startForegroundService(service);
         } else
-            return mContext.startService(service) != null;
+            mContext.startService(service);
     }
 
     private void stopNotificationService() {
+        LOGD(TAG, "stopNotificationService()");
         if (!isFeatureEnabled(CastConfiguration.FEATURE_NOTIFICATION)) {
             return;
         }
@@ -2302,27 +2307,9 @@ public class VideoCastManager extends BaseCastManager
                     .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, bm)
                     .build());
         } else {
-            if (mLockScreenFetchTask != null) {
-                mLockScreenFetchTask.cancel(true);
-            }
             Point screenSize = Utils.getDisplaySize(mContext);
-            mLockScreenFetchTask = new FetchBitmapTask(screenSize.x, screenSize.y, false) {
-                @Override
-                protected void onPostExecute(Bitmap bitmap) {
-                    if (bitmap != null && mMediaSessionCompat != null) {
-                        MediaMetadataCompat currentMetadata = mMediaSessionCompat.getController()
-                                .getMetadata();
-                        MediaMetadataCompat.Builder newBuilder = currentMetadata == null
-                                ? new MediaMetadataCompat.Builder()
-                                : new MediaMetadataCompat.Builder(currentMetadata);
-                        mMediaSessionCompat.setMetadata(newBuilder
-                                .putBitmap(MediaMetadataCompat.METADATA_KEY_ART, bitmap)
-                                .build());
-                    }
-                    mLockScreenFetchTask = null;
-                }
-            };
-            mLockScreenFetchTask.execute(imgUrl);
+            RequestOptions options = new RequestOptions().override(screenSize.x, screenSize.y);
+            Glide.with(mContext).asBitmap().load(imgUrl).apply(options).into(artTarget);
         }
     }
     /*
@@ -2404,25 +2391,7 @@ public class VideoCastManager extends BaseCastManager
                         .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bm)
                         .build());
             } else {
-                if (mMediaSessionIconFetchTask != null) {
-                    mMediaSessionIconFetchTask.cancel(true);
-                }
-                mMediaSessionIconFetchTask = new FetchBitmapTask() {
-                    @Override
-                    protected void onPostExecute(Bitmap bitmap) {
-                        if (bitmap != null && mMediaSessionCompat != null) {
-                            MediaMetadataCompat currentMetadata = mMediaSessionCompat
-                                    .getController().getMetadata();
-                            MediaMetadataCompat.Builder newBuilder = currentMetadata == null
-                                    ? new MediaMetadataCompat.Builder()
-                                    : new MediaMetadataCompat.Builder(currentMetadata);
-                            mMediaSessionCompat.setMetadata(newBuilder.putBitmap(
-                                    MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bitmap).build());
-                        }
-                        mMediaSessionIconFetchTask = null;
-                    }
-                };
-                mMediaSessionIconFetchTask.execute(iconUri);
+                Glide.with(mContext).asBitmap().load(iconUri).into(iconTarget);
             }
 
         } catch (NotFoundException e) {
@@ -2438,12 +2407,8 @@ public class VideoCastManager extends BaseCastManager
     public void clearMediaSession() {
         LOGD(TAG, "clearMediaSession()");
         if (isFeatureEnabled(CastConfiguration.FEATURE_LOCKSCREEN)) {
-            if (mLockScreenFetchTask != null) {
-                mLockScreenFetchTask.cancel(true);
-            }
-            if (mMediaSessionIconFetchTask != null) {
-                mMediaSessionIconFetchTask.cancel(true);
-            }
+            Glide.with(mContext).clear(iconTarget);
+            Glide.with(mContext).clear(artTarget);
             mAudioManager.abandonAudioFocus(null);
             if (mMediaSessionCompat != null) {
                 mMediaSessionCompat.setMetadata(null);
@@ -3008,5 +2973,23 @@ public class VideoCastManager extends BaseCastManager
      */
     protected String getDataNamespace() {
         return mDataNamespace;
+    }
+
+    private class ImageTarget extends SimpleTarget<Bitmap> {
+        private String key;
+
+        public ImageTarget(@NonNull String k) {
+            key = k;
+        }
+
+        @Override
+        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+            if (mMediaSessionCompat != null) {
+                MediaMetadataCompat currentMetadata = mMediaSessionCompat.getController().getMetadata();
+                MediaMetadataCompat.Builder newBuilder = currentMetadata == null ? new MediaMetadataCompat.Builder() :
+                        new MediaMetadataCompat.Builder(currentMetadata);
+                mMediaSessionCompat.setMetadata(newBuilder.putBitmap(key, resource).build());
+            }
+        }
     }
 }

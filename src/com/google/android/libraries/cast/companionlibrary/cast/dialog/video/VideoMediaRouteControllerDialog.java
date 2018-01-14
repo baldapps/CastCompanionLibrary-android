@@ -16,6 +16,7 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.dialog.video;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -29,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaStatus;
@@ -39,7 +41,6 @@ import com.google.android.libraries.cast.companionlibrary.cast.callbacks.VideoCa
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.CastException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.NoConnectionException;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
-import com.google.android.libraries.cast.companionlibrary.utils.FetchBitmapTask;
 import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
 
 
@@ -51,8 +52,7 @@ import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.
  */
 public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog {
 
-    private static final String TAG =
-            LogUtils.makeLogTag(VideoMediaRouteControllerDialog.class);
+    private static final String TAG = LogUtils.makeLogTag(VideoMediaRouteControllerDialog.class);
 
     private ImageView mIcon;
     private ImageView mPausePlay;
@@ -70,7 +70,6 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
     private Context mContext;
     private View mIconContainer;
     private View mTextContainer;
-    private FetchBitmapTask mFetchBitmap;
 
     private int mStreamType;
 
@@ -108,12 +107,9 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
 
             };
             mCastManager.addVideoCastConsumer(mCastConsumerImpl);
-            mPauseDrawable = context.getResources()
-                    .getDrawable(R.drawable.ic_media_route_controller_pause);
-            mPlayDrawable = context.getResources()
-                    .getDrawable(R.drawable.ic_media_route_controller_play);
-            mStopDrawable = context.getResources()
-                    .getDrawable(R.drawable.ic_media_route_controller_stop);
+            mPauseDrawable = context.getResources().getDrawable(R.drawable.ic_media_route_controller_pause);
+            mPlayDrawable = context.getResources().getDrawable(R.drawable.ic_media_route_controller_play);
+            mStopDrawable = context.getResources().getDrawable(R.drawable.ic_media_route_controller_stop);
         } catch (IllegalStateException e) {
             LOGE(TAG, "Failed to update the content of dialog", e);
         }
@@ -125,10 +121,7 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
             mCastManager.removeVideoCastConsumer(mCastConsumerImpl);
             mCastManager = null;
         }
-        if (mFetchBitmap != null) {
-            mFetchBitmap.cancel(true);
-            mFetchBitmap = null;
-        }
+        Glide.with(getContext()).clear(mIcon);
         super.onStop();
     }
 
@@ -173,26 +166,11 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
         }
         mIconUri = uri;
         if (uri == null) {
-            Bitmap bm = BitmapFactory.decodeResource(
-                    mContext.getResources(), R.drawable.album_art_placeholder);
+            Bitmap bm = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.album_art_placeholder);
             mIcon.setImageBitmap(bm);
             return;
         }
-        if (mFetchBitmap != null) {
-            mFetchBitmap.cancel(true);
-        }
-
-        mFetchBitmap = new FetchBitmapTask() {
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                mIcon.setImageBitmap(bitmap);
-                if (this == mFetchBitmap) {
-                    mFetchBitmap = null;
-                }
-            }
-        };
-
-        mFetchBitmap.execute(mIconUri);
+        Glide.with(getContext()).load(mIconUri).into(mIcon);
     }
 
     private void updatePlayPauseState(int state) {
@@ -210,8 +188,8 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
                     mPausePlay.setVisibility(View.INVISIBLE);
                     setLoadingVisibility(false);
 
-                    if (mState == MediaStatus.PLAYER_STATE_IDLE
-                            && mCastManager.getIdleReason() == MediaStatus.IDLE_REASON_FINISHED) {
+                    if (mState == MediaStatus.PLAYER_STATE_IDLE && mCastManager.getIdleReason() == MediaStatus
+                            .IDLE_REASON_FINISHED) {
                         hideControls(true, R.string.ccl_no_media_info);
                     } else {
                         switch (mStreamType) {
@@ -269,9 +247,8 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
     @Override
     public View onCreateMediaControlView(Bundle savedInstanceState) {
         LayoutInflater inflater = getLayoutInflater();
-        View controls = inflater.inflate(R.layout.custom_media_route_controller_controls_dialog,
-                null);
-
+        @SuppressLint("InflateParams") View controls = inflater.inflate(R.layout
+                .custom_media_route_controller_controls_dialog, null);
         loadViews(controls);
         mState = mCastManager.getPlaybackStatus();
         updateMetadata();
@@ -322,8 +299,7 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
     }
 
     private void showTargetActivity() {
-        if (mCastManager != null
-                && mCastManager.getTargetActivity() != null) {
+        if (mCastManager != null && mCastManager.getTargetActivity() != null) {
             try {
                 mCastManager.onTargetActivityInvoked(mContext);
             } catch (TransientNetworkDisconnectionException | NoConnectionException e) {
@@ -334,13 +310,13 @@ public class VideoMediaRouteControllerDialog extends MediaRouteControllerDialog 
     }
 
     private void loadViews(View controls) {
-        mIcon = (ImageView) controls.findViewById(R.id.iconView);
+        mIcon = controls.findViewById(R.id.iconView);
         mIconContainer = controls.findViewById(R.id.iconContainer);
         mTextContainer = controls.findViewById(R.id.textContainer);
-        mPausePlay = (ImageView) controls.findViewById(R.id.playPauseView);
-        mTitle = (TextView) controls.findViewById(R.id.titleView);
-        mSubTitle = (TextView) controls.findViewById(R.id.subTitleView);
-        mLoading = (ProgressBar) controls.findViewById(R.id.loadingView);
-        mEmptyText = (TextView) controls.findViewById(R.id.emptyView);
+        mPausePlay = controls.findViewById(R.id.playPauseView);
+        mTitle = controls.findViewById(R.id.titleView);
+        mSubTitle = controls.findViewById(R.id.subTitleView);
+        mLoading = controls.findViewById(R.id.loadingView);
+        mEmptyText = controls.findViewById(R.id.emptyView);
     }
 }
