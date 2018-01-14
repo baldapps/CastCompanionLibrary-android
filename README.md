@@ -3,10 +3,11 @@
 CastCompanionLibrary-android is a library project to enable developers integrate Cast capabilities into their applications faster and easier.
 
 ## Dependencies
-* google-play-services_lib library from the Android SDK (at least version 11.4.+)
-* android-support-v7-appcompat (version 27.0.0 or above)
-* android-support-v7-mediarouter (version 27.0.0 or above)
-* android-support-v4 (version 27.0.0 or above)
+* google-play-services_lib library from the Android SDK (at least version 11.8.+)
+* android-support-v7-appcompat (version 27.0.2 or above)
+* android-support-v7-mediarouter (version 27.0.2 or above)
+* android-support-v4 (version 27.0.2 or above)
+* glide (version 4.5.0 or above)
 
 ## Set up Instructions
 Set up the project dependencies. To use this library in your project, you have two options:
@@ -48,6 +49,12 @@ See LICENSE
 Your use of this sample is subject to, and by using or downloading the sample files you agree to comply with, the [Google APIs Terms of Service](https://developers.google.com/terms/) and the [Google Cast SDK Additional Developer Terms of Service](https://developers.google.com/cast/docs/terms/).
 
 ## Change List
+
+3.1.0
+ * Image processing is now performed with Glide library
+ * It's now possible to use multiple BaseCastManager instances using the factory
+ * Removed a bunch of lint warnings
+ * Removed no more used code
 
 3.0.0
  * Removed singleton patterns from VideoCastManager and DataCastManager. Init is performed in this way:
