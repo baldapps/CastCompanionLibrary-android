@@ -46,6 +46,7 @@ import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.
  * This class manages preference settings for captions for Android versions prior to KitKat and
  * provides a number of methods that would work across all supported versions of Android.
  */
+@SuppressWarnings("unused")
 public class TracksPreferenceManager implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = LogUtils.makeLogTag(TracksPreferenceManager.class);
@@ -131,7 +132,7 @@ public class TracksPreferenceManager implements SharedPreferences.OnSharedPrefer
         if (Utils.IS_KITKAT_OR_ABOVE) {
             CaptioningManager captioningManager = (CaptioningManager) mContext.getSystemService(Context
                     .CAPTIONING_SERVICE);
-            return captioningManager.isEnabled();
+            return captioningManager != null && captioningManager.isEnabled();
         } else {
             return mPreferenceAccessor.getBooleanFromPreference(mContext.getString(R.string.ccl_key_caption_enabled),
                     false);

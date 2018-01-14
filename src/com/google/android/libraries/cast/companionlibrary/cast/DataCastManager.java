@@ -17,6 +17,7 @@
 package com.google.android.libraries.cast.companionlibrary.cast;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v7.media.MediaRouter.RouteInfo;
 import android.text.TextUtils;
 
@@ -71,6 +72,7 @@ import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.
  * update/activate their Google Play Services library. To learn more about this library, please read
  * the documentation that is distributed as part of this library.
  */
+@SuppressWarnings("unused")
 public class DataCastManager extends BaseCastManager implements Cast.MessageReceivedCallback {
 
     private static final String TAG = LogUtils.makeLogTag(DataCastManager.class);
@@ -156,7 +158,7 @@ public class DataCastManager extends BaseCastManager implements Cast.MessageRece
      * @throws IllegalArgumentException If the the message is null, empty, or too long; or if the
      * namespace is null or too long.
      * @throws IllegalStateException If there is no active service connection.
-     * @throws IOException
+     * @throws IOException Exception
      */
     public void sendDataMessage(String message, String namespace)
             throws IllegalArgumentException, IllegalStateException, IOException {
@@ -168,7 +170,7 @@ public class DataCastManager extends BaseCastManager implements Cast.MessageRece
                 setResultCallback(new ResultCallback<Status>() {
 
                     @Override
-                    public void onResult(Status result) {
+                    public void onResult(@NonNull Status result) {
                         if (!result.isSuccess()) {
                             DataCastManager.this.onMessageSendFailed(result);
                         }
@@ -184,7 +186,7 @@ public class DataCastManager extends BaseCastManager implements Cast.MessageRece
     @Override
     protected Builder getCastOptionBuilder(CastDevice device) {
 
-        Builder builder = Cast.CastOptions.builder(
+        @SuppressWarnings("deprecation") Builder builder = Cast.CastOptions.builder(
                 mSelectedCastDevice, new CastListener());
         if (isFeatureEnabled(CastConfiguration.FEATURE_DEBUGGING)) {
             builder.setVerboseLoggingEnabled(true);
@@ -299,6 +301,7 @@ public class DataCastManager extends BaseCastManager implements Cast.MessageRece
 
     @Override
     public void onApplicationConnectionFailed(int errorCode) {
+        LOGE(TAG, "onApplicationConnectionFailed error: "+errorCode);
         if (mReconnectionStatus == RECONNECTION_STATUS_IN_PROGRESS) {
             if (errorCode == CastStatusCodes.APPLICATION_NOT_RUNNING) {
                 // while trying to re-establish session, we found out that the app is not running

@@ -31,6 +31,8 @@ public class ReconnectionJobService extends JobService {
         castManager.getPreferenceAccessor()
                 .saveBooleanToPreference(BaseCastManager.PREFS_KEY_WIFI_STATUS, ssid != null);
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+        if (jobScheduler == null)
+            return;
         JobInfo info = new JobInfo.Builder(context.getResources()
                 .getInteger(R.integer.job_reconnect_id), new ComponentName(context, ReconnectionJobService.class))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
@@ -54,6 +56,8 @@ public class ReconnectionJobService extends JobService {
                 .getInteger(R.integer.job_reconnect_id), new ComponentName(context, ReconnectionJobService.class))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                 .build();
+        if (jobScheduler == null)
+            return;
         jobScheduler.schedule(info);
     }
 
@@ -64,11 +68,15 @@ public class ReconnectionJobService extends JobService {
                 ReconnectionJobService.class))
                 .setMinimumLatency(ClearInfoJob.getRemainingTime())
                 .build();
+        if (jobScheduler == null)
+            return;
         jobScheduler.schedule(info);
     }
 
     public static void stopService(Context context) {
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+        if (jobScheduler == null)
+            return;
         jobScheduler.cancel(context.getResources().getInteger(R.integer.job_reconnect_id));
         jobScheduler.cancel(context.getResources().getInteger(R.integer.job_clear_persistent_info_id));
     }

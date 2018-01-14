@@ -16,11 +16,9 @@
 
 package com.google.android.libraries.cast.companionlibrary.cast.tracks.ui;
 
-import com.google.android.gms.cast.MediaTrack;
-import com.google.android.libraries.cast.companionlibrary.R;
-
 import android.app.Activity;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,21 +26,22 @@ import android.widget.ArrayAdapter;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import com.google.android.gms.cast.MediaTrack;
+import com.google.android.libraries.cast.companionlibrary.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * An {@link android.widget.ArrayAdapter} for presenting tracks.
  */
-public class TracksListAdapter extends ArrayAdapter<MediaTrack>
-        implements View.OnClickListener {
+public class TracksListAdapter extends ArrayAdapter<MediaTrack> implements View.OnClickListener {
 
     private final List<MediaTrack> mTracks;
     private final Context mContext;
     private int mSelectedPosition = -1;
 
-    public TracksListAdapter(Context context, int resource, List<MediaTrack> tracks,
-            int activePosition) {
+    public TracksListAdapter(Context context, int resource, List<MediaTrack> tracks, int activePosition) {
         super(context, resource);
         this.mContext = context;
         mTracks = new ArrayList<>();
@@ -50,17 +49,17 @@ public class TracksListAdapter extends ArrayAdapter<MediaTrack>
         mSelectedPosition = activePosition;
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         Holder holder;
 
         if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(
-                    Activity.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
+            //noinspection ConstantConditions
             convertView = inflater.inflate(R.layout.tracks_row_layout, parent, false);
-
-            holder = new Holder((TextView) convertView.findViewById(R.id.text),
-                    (RadioButton) convertView.findViewById(R.id.radio));
+            holder = new Holder((TextView) convertView.findViewById(R.id.text), (RadioButton) convertView
+                    .findViewById(R.id.radio));
             convertView.setTag(holder);
         } else {
             holder = (Holder) convertView.getTag();

@@ -60,7 +60,7 @@ public class TracksChooserDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        LayoutInflater inflater = getActivity().getLayoutInflater();
+        LayoutInflater inflater = LayoutInflater.from(getActivity());
         // since dialog doesn't expose its root view at this point (doesn't exist yet), we cannot
         // attach to the unknown eventual parent, so we need to pass null for the rootView parameter
         // of the inflate() method
@@ -125,14 +125,17 @@ public class TracksChooserDialog extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        Bundle mediaWrapper = getArguments().getBundle(VideoCastManager.EXTRA_MEDIA);
-        mMediaInfo = Utils.bundleToMediaInfo(mediaWrapper);
-        mCastManager = CastManagerBuilder.getCastManager();
-        mActiveTracks = mCastManager.getActiveTrackIds();
-        List<MediaTrack> allTracks = mMediaInfo.getMediaTracks();
-        if (allTracks == null || allTracks.isEmpty()) {
-            Utils.showToast(getActivity(), R.string.ccl_caption_no_tracks_available);
-            dismiss();
+        Bundle args = getArguments();
+        if (args != null) {
+            Bundle mediaWrapper = getArguments().getBundle(VideoCastManager.EXTRA_MEDIA);
+            mMediaInfo = Utils.bundleToMediaInfo(mediaWrapper);
+            mCastManager = CastManagerBuilder.getCastManager();
+            mActiveTracks = mCastManager.getActiveTrackIds();
+            List<MediaTrack> allTracks = mMediaInfo.getMediaTracks();
+            if (allTracks == null || allTracks.isEmpty()) {
+                Utils.showToast(getActivity(), R.string.ccl_caption_no_tracks_available);
+                dismiss();
+            }
         }
     }
 
@@ -149,10 +152,10 @@ public class TracksChooserDialog extends DialogFragment {
     }
 
     private void setUpView(View view) {
-        ListView listView1 = (ListView) view.findViewById(R.id.listview1);
-        ListView listView2 = (ListView) view.findViewById(R.id.listview2);
-        TextView textEmptyMessageView = (TextView) view.findViewById(R.id.text_empty_message);
-        TextView audioEmptyMessageView = (TextView) view.findViewById(R.id.audio_empty_message);
+        ListView listView1 = view.findViewById(R.id.listview1);
+        ListView listView2 = view.findViewById(R.id.listview2);
+        TextView textEmptyMessageView = view.findViewById(R.id.text_empty_message);
+        TextView audioEmptyMessageView = view.findViewById(R.id.audio_empty_message);
         partitionTracks();
 
         mTextAdapter = new TracksListAdapter(getActivity(), R.layout.tracks_row_layout,
@@ -163,7 +166,7 @@ public class TracksChooserDialog extends DialogFragment {
         listView1.setAdapter(mTextAdapter);
         listView2.setAdapter(mAudioVideoAdapter);
 
-        TabHost tabs = (TabHost) view.findViewById(R.id.tabhost);
+        TabHost tabs = view.findViewById(R.id.tabhost);
         tabs.setup();
 
         // create tab 1

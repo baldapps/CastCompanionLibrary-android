@@ -19,6 +19,7 @@ package com.google.android.libraries.cast.companionlibrary.remotecontrol;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.KeyEvent;
 
 import com.google.android.libraries.cast.companionlibrary.cast.CastManagerBuilder;
@@ -109,7 +110,10 @@ public class VideoIntentReceiver extends BroadcastReceiver {
                 if (!intent.hasExtra(Intent.EXTRA_KEY_EVENT)) {
                     return;
                 }
-                KeyEvent keyEvent = (KeyEvent) intent.getExtras().get(Intent.EXTRA_KEY_EVENT);
+                Bundle b = intent.getExtras();
+                if (b == null)
+                    return;
+                KeyEvent keyEvent = (KeyEvent) b.get(Intent.EXTRA_KEY_EVENT);
                 if (keyEvent == null || keyEvent.getAction() != KeyEvent.ACTION_DOWN) {
                     return;
                 }

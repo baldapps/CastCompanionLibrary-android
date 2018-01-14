@@ -109,6 +109,7 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
         AUTHORIZING, PLAYBACK, UNKNOWN
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -127,7 +128,9 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
             return;
         }
         Bundle extras = bundle.getBundle(EXTRAS);
-        Bundle mediaWrapper = extras.getBundle(VideoCastManager.EXTRA_MEDIA);
+        Bundle mediaWrapper = null;
+        if (extras != null)
+            mediaWrapper = extras.getBundle(VideoCastManager.EXTRA_MEDIA);
 
         // Retain this fragment across configuration changes.
         setRetainInstance(true);
@@ -140,7 +143,7 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
         mCastManager.getPreferenceAccessor().saveBooleanToPreference(VideoCastManager.PREFS_KEY_START_ACTIVITY, false);
         mCastController.setNextPreviousVisibilityPolicy(mCastManager.getCastConfiguration()
                 .getNextPrevVisibilityPolicy());
-        if (extras.getBoolean(VideoCastManager.EXTRA_HAS_AUTH)) {
+        if (extras != null && extras.getBoolean(VideoCastManager.EXTRA_HAS_AUTH)) {
             if (mIsFresh) {
                 mOverallState = OverallState.AUTHORIZING;
                 mMediaAuthService = mCastManager.getMediaAuthService();
@@ -223,6 +226,7 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
 
     }
 
+    @SuppressWarnings("deprecation")
     private class MyCastConsumer extends VideoCastConsumerImpl {
 
         @Override
@@ -611,6 +615,7 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
             return frag;
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public void onAttach(Activity activity) {
             mController = (VideoCastController) activity;
@@ -621,7 +626,10 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            String message = getArguments().getString(MESSAGE);
+            Bundle b = getArguments();
+            String message = "";
+            if (b != null)
+                message = getArguments().getString(MESSAGE);
             return new AlertDialog.Builder(getActivity()).setTitle(R.string.ccl_error)
                     .setMessage(message)
                     .setPositiveButton(R.string.ccl_ok, new DialogInterface.OnClickListener() {
@@ -640,7 +648,9 @@ public class VideoCastControllerFragment extends Fragment implements OnVideoCast
      * Shows an error dialog
      */
     private void showErrorDialog(String message) {
-        ErrorDialogFragment.newInstance(message).show(getFragmentManager(), "dlg");
+        android.support.v4.app.FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager != null)
+            ErrorDialogFragment.newInstance(message).show(fragmentManager, "dlg");
     }
 
     @Override

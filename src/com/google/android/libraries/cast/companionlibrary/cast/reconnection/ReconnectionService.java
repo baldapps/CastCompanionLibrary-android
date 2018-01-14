@@ -105,7 +105,7 @@ public class ReconnectionService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
                 final String action = intent.getAction();
-                if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(action)) {
                     NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
                     boolean connected = info.isConnected();
                     String networkSsid = connected ? Utils.getWifiSsid(context) : null;

@@ -61,6 +61,7 @@ import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.
 /**
  * A collection of utility methods, all static.
  */
+@SuppressWarnings("unused")
 public final class Utils {
 
     private static final String TAG = LogUtils.makeLogTag(Utils.class);
@@ -155,7 +156,7 @@ public final class Utils {
      * {@link MediaInfo}. Since {@link MediaInfo} is not {@link Parcelable}, one can use this
      * container bundle to pass around from one activity to another.
      *
-     * @see <code>bundleToMediaInfo()</code>
+     * @see #bundleToMediaInfo
      */
     public static Bundle mediaInfoToBundle(MediaInfo info) {
         if (info == null) {
@@ -230,7 +231,7 @@ public final class Utils {
      * <code>mediaInfoToBundle</code>. It is assumed that the type of the {@link MediaInfo} is
      * {@code MediaMetaData.MEDIA_TYPE_MOVIE}
      *
-     * @see <code>mediaInfoToBundle()</code>
+     * @see #mediaInfoToBundle
      */
     public static MediaInfo bundleToMediaInfo(Bundle wrapper) {
         if (wrapper == null) {
@@ -325,6 +326,8 @@ public final class Utils {
      */
     public static String getWifiSsid(Context context) {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null)
+            return null;
         try {
             WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             if (wifiInfo != null && wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
@@ -472,21 +475,17 @@ public final class Utils {
         return string;
     }
 
-    // Display.getHeight() and getWidth() are deprecated but Display.getSize(), which is now the
-    // recommended replacement was introduced in API level 13+.
-    @SuppressWarnings("deprecation")
     /**
      * Returns the screen/display size.
-     */ public static Point getDisplaySize(Context context) {
+     */
+    public static Point getDisplaySize(Context context) {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null)
+            return new Point(0, 0);
         Display display = wm.getDefaultDisplay();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB_MR2) {
-            return new Point(display.getWidth(), display.getHeight());
-        } else {
-            Point outSize = new Point();
-            display.getSize(outSize);
-            return outSize;
-        }
+        Point outSize = new Point();
+        display.getSize(outSize);
+        return outSize;
     }
 
     /**

@@ -164,17 +164,17 @@ public class VideoCastControllerActivity extends AppCompatActivity implements
         mPlayDrawable = getResources().getDrawable(R.drawable.ic_play_circle_white_80dp);
         mStopDrawable = getResources().getDrawable(R.drawable.ic_stop_circle_white_80dp);
         mPageView = findViewById(R.id.pageview);
-        mPlayPause = (ImageButton) findViewById(R.id.play_pause_toggle);
-        mLiveText = (TextView) findViewById(R.id.live_text);
-        mStart = (TextView) findViewById(R.id.start_text);
-        mEnd = (TextView) findViewById(R.id.end_text);
-        mSeekbar = (SeekBar) findViewById(R.id.seekbar);
-        mLine2 = (TextView) findViewById(R.id.textview2);
-        mLoading = (ProgressBar) findViewById(R.id.progressbar1);
+        mPlayPause = findViewById(R.id.play_pause_toggle);
+        mLiveText = findViewById(R.id.live_text);
+        mStart = findViewById(R.id.start_text);
+        mEnd = findViewById(R.id.end_text);
+        mSeekbar = findViewById(R.id.seekbar);
+        mLine2 = findViewById(R.id.textview2);
+        mLoading = findViewById(R.id.progressbar1);
         mControllers = findViewById(R.id.controllers);
-        mClosedCaptionIcon = (ImageButton) findViewById(R.id.cc);
-        mSkipNext = (ImageButton) findViewById(R.id.next);
-        mSkipPrevious = (ImageButton) findViewById(R.id.previous);
+        mClosedCaptionIcon = findViewById(R.id.cc);
+        mSkipNext = findViewById(R.id.next);
+        mSkipPrevious = findViewById(R.id.previous);
         mPlaybackControls = findViewById(R.id.playback_controls);
         ((MiniController) findViewById(R.id.miniController1)).setCurrentVisibility(false);
         setClosedCaptionState(CC_DISABLED);
@@ -290,7 +290,7 @@ public class VideoCastControllerActivity extends AppCompatActivity implements
     }
 
     private void setUpActionBar() {
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -494,9 +494,6 @@ public class VideoCastControllerActivity extends AppCompatActivity implements
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void setImmersive() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            return;
-        }
         int newUiOptions = getWindow().getDecorView().getSystemUiVisibility();
 
         // Navigation bar hiding:  Backwards compatible to ICS.
@@ -509,7 +506,7 @@ public class VideoCastControllerActivity extends AppCompatActivity implements
             newUiOptions ^= View.SYSTEM_UI_FLAG_FULLSCREEN;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             newUiOptions ^= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         }
 
