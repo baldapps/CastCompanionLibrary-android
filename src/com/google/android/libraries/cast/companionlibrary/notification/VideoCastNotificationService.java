@@ -125,13 +125,13 @@ public class VideoCastNotificationService extends Service {
         LOGD(TAG, "cast notification created");
         super.onCreate();
         mCastManager = CastManagerBuilder.getCastManager();
+        mDimensionInPixels = Utils.convertDpToPixel(VideoCastNotificationService.this, getResources().getDimension(R
+                .dimen.ccl_notification_image_size));
+        readPersistedData();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setUpNotification();
             startForeground(NOTIFICATION_ID, mNotification);
         }
-        mDimensionInPixels = Utils.convertDpToPixel(VideoCastNotificationService.this, getResources().getDimension(R
-                .dimen.ccl_notification_image_size));
-        readPersistedData();
         if (!mCastManager.isConnected() && !mCastManager.isConnecting()) {
             mCastManager.reconnectSessionIfPossible();
         }
