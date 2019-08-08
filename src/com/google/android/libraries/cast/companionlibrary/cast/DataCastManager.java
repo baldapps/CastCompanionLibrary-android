@@ -17,8 +17,8 @@
 package com.google.android.libraries.cast.companionlibrary.cast;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v7.media.MediaRouter.RouteInfo;
+import androidx.annotation.NonNull;
+import androidx.mediarouter.media.MediaRouter.RouteInfo;
 import android.text.TextUtils;
 
 import com.google.android.gms.cast.ApplicationMetadata;

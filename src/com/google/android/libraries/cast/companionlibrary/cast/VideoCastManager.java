@@ -32,12 +32,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceScreen;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.media.MediaRouter.RouteInfo;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -99,6 +96,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.mediarouter.media.MediaRouter.RouteInfo;
 
 
 import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;

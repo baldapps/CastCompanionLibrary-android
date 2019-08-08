@@ -19,9 +19,9 @@ package com.google.android.libraries.cast.companionlibrary.cast;
 import android.app.Service;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.v7.app.MediaRouteDialogFactory;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.mediarouter.app.MediaRouteDialogFactory;
 
 import com.google.android.gms.cast.LaunchOptions;
 import com.google.android.libraries.cast.companionlibrary.utils.Utils;

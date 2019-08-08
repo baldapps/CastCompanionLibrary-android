@@ -28,11 +28,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
-import android.support.v4.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -57,6 +52,12 @@ import com.google.android.libraries.cast.companionlibrary.utils.Utils;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.TaskStackBuilder;
+import androidx.core.content.ContextCompat;
 
 
 import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.LOGD;
@@ -417,7 +418,7 @@ public class VideoCastNotificationService extends Service {
                 .setContentText(castingTo)
                 .setContentIntent(getContentIntent(info))
                 .setLargeIcon(bitmap)
-                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(mNotificationCompactActionsArray)
                         .setMediaSession(mCastManager.getMediaSessionCompatToken()))
                 .setOngoing(true)
